@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<CSP name="DeepSee.js" application="/csp/amcharts/" default="1"><![CDATA[
+/*** Zen Module: DeepSee ***/
+
+self._zenClassIdx['http://www.intersystems.com/deepsee/AmChartPortlet'] = 'DeepSee_AmChartPortlet';
+self.DeepSee_AmChartPortlet = function(index,id) {
+	if (index>=0) {DeepSee_AmChartPortlet__init(this,index,id);}
+}
+
+self.DeepSee_AmChartPortlet__init = function(o,index,id) {
+	('undefined' == typeof _DeepSee_Component_Portlet_abstractPortlet__init) ?zenMaster._DeepSee_Component_Portlet_abstractPortlet__init(o,index,id):_DeepSee_Component_Portlet_abstractPortlet__init(o,index,id);
+	o.controller = '';
+	o.controllerId = '';
+	o.ongetcontroller = '';
+	o.onnotifyView = '';
+}
+function DeepSee_AmChartPortlet_serialize(set,s)
+{
+	var o = this;s[0]='1651304131';s[1]=o.index;s[2]=o.id;s[3]=o.name;s[4]=set.addObject(o.parent,'parent');s[5]=set.addObject(o.composite,'composite');s[6]=o.align;s[7]=o.aux;s[8]=o.containerStyle;s[9]=o.controller;s[10]=o.controllerId;s[11]=(o.dragEnabled?1:0);s[12]=(o.dropEnabled?1:0);s[13]=(o.dynamic?1:0);s[14]=o.enclosingClass;s[15]=o.enclosingStyle;s[16]=o.error;s[17]=o.height;s[18]=(o.hidden?1:0);s[19]=o.hint;s[20]=o.hintClass;s[21]=o.hintStyle;s[22]=o.label;s[23]=o.labelClass;s[24]=o.labelDisabledClass;s[25]=o.labelStyle;s[26]=o.onafterdrag;s[27]=o.onbeforedrag;s[28]=o.ondrag;s[29]=o.ondrop;s[30]=o.ongetcontroller;s[31]=o.onhide;s[32]=o.onnotifyView;s[33]=o.onrefresh;s[34]=o.onshow;s[35]=o.onupdate;s[36]=o.overlayMode;s[37]=o.renderFlag;s[38]=(o.showLabel?1:0);s[39]=o.slice;s[40]=o.title;s[41]=o.tuple;s[42]=o.valign;s[43]=(o.visible?1:0);s[44]=o.width;
+}
+function DeepSee_AmChartPortlet_getSettings(s)
+{
+	s['name'] = 'string';
+	s['controllerId'] = 'id';
+	s['ongetcontroller'] = 'eventHandler';
+	s['onnotifyView'] = 'eventHandler';
+	this.invokeSuper('getSettings',arguments);
+}
+
+self.DeepSee_AmChartPortlet_adjustContentSize = function(load,width,height) {
+var obj=document.getElementById('chartdiv');
+obj.style.width=width+'px';
+obj.style.height=height+'px';
+this.chart.invalidateSize();
+}
+
+self.DeepSee_AmChartPortlet_connectToController = function() {
+this.controller = '';
+if (!zenIsMissing(this.controllerId)) {
+if (this.composite) {
+this.controller = this.composite.getChildById(this.controllerId);
+}
+else {
+this.controller = zenPage.getComponentById(this.controllerId);
+}
+if (this.controller && this.controller.register) {
+this.controller.register(this);
+}
+else {
+alert('ZEN: Unable to connect component to dataController (' + this.id + ').');
+}
+if (this.controller) {
+if ('' == this.controller.modelError) {
+this.controller.loadModel(false);
+}
+}
+}
+}
+
+self.DeepSee_AmChartPortlet_disconnectFromController = function() {
+if (this.controller && this.controller.unregister) {
+this.controller.unregister(this);
+}
+this.controller = '';
+}
+
+self.DeepSee_AmChartPortlet_getController = function() {
+if (this.ongetcontroller) {
+return zenInvokeCallbackMethod(this.ongetcontroller,this,'ongetcontroller','view',this);
+}
+return (null == this.controller || '' == this.controller) ? null : this.controller;
+}
+
+self.DeepSee_AmChartPortlet_notifyView = function(reason,data1,data2,data3) {
+var ret = true;
+if (this.onnotifyView) {
+ret = zenInvokeCallbackMethod(this.onnotifyView,this,'onnotifyEvent','reason',reason,'data1',data1,'data2',data2,'data3',data3);
+}
+if (ret && this.notifyViewHandler) {
+this.notifyViewHandler(reason,data1,data2,data3);
+}
+}
+
+self.DeepSee_AmChartPortlet_renderContents = function() {
+var chart;
+var chartData = [{
+year: 2005,
+income: 23.5,
+expenses: 18.1
+}, {
+year: 2006,
+income: 26.2,
+expenses: 22.8
+}, {
+year: 2007,
+income: 30.1,
+expenses: 23.9
+}, {
+year: 2008,
+income: 29.5,
+expenses: 25.1
+}, {
+year: 2009,
+income: 24.6,
+expenses: 25.0
+}];
+chart = new AmCharts.AmSerialChart();
+chart.dataProvider = chartData;
+chart.categoryField = "year";
+chart.startDuration = 1;
+chart.plotAreaBorderColor = "#DADADA";
+chart.plotAreaBorderAlpha = 1;
+chart.rotate = true;
+var categoryAxis = chart.categoryAxis;
+categoryAxis.gridPosition = "start";
+categoryAxis.gridAlpha = 0.1;
+categoryAxis.axisAlpha = 0;
+var valueAxis = new AmCharts.ValueAxis();
+valueAxis.axisAlpha = 0;
+valueAxis.gridAlpha = 0.1;
+valueAxis.position = "top";
+chart.addValueAxis(valueAxis);
+var graph1 = new AmCharts.AmGraph();
+graph1.type = "column";
+graph1.title = "Income";
+graph1.valueField = "income";
+graph1.balloonText = "Income:[[value]]";
+graph1.lineAlpha = 0;
+graph1.fillColors = "#ADD981";
+graph1.fillAlphas = 1;
+chart.addGraph(graph1);
+var graph2 = new AmCharts.AmGraph();
+graph2.type = "column";
+graph2.title = "Expenses";
+graph2.valueField = "expenses";
+graph2.balloonText = "Expenses:[[value]]";
+graph2.lineAlpha = 0;
+graph2.fillColors = "#81acd9";
+graph2.fillAlphas = 1;
+chart.addGraph(graph2);
+var legend = new AmCharts.AmLegend();
+chart.addLegend(legend);
+chart.write("chartdiv");
+this.chart = chart;
+}
+
+self.DeepSee_AmChartPortlet_sendEventToController = function(reason,data1,data2,data3) {
+var controller = this.getController();
+if (controller && controller.notifyController) {
+controller.notifyController(this,reason,data1,data2,data3);
+}
+}
+
+self.DeepSee_AmChartPortlet_setControllerId = function(id) {
+this.disconnectFromController();
+this.controllerId = id;
+this.connectToController();
+}
+
+self.DeepSee_AmChartPortlet_ReallyRefreshContents = function() {
+	zenInstanceMethod(this,'ReallyRefreshContents','','',arguments);
+}
+self.DeepSee_AmChartPortlet__Loader = function() {
+	zenLoadClass('_DeepSee_Component_Portlet_abstractPortlet');
+	DeepSee_AmChartPortlet.prototype = zenCreate('_DeepSee_Component_Portlet_abstractPortlet',-1);
+	var p = DeepSee_AmChartPortlet.prototype;
+	if (null==p) {return;}
+	p.constructor = DeepSee_AmChartPortlet;
+	p.superClass = ('undefined' == typeof _DeepSee_Component_Portlet_abstractPortlet) ? zenMaster._DeepSee_Component_Portlet_abstractPortlet.prototype:_DeepSee_Component_Portlet_abstractPortlet.prototype;
+	p.__ZENcomponent = true;
+	p._serverClass = 'DeepSee.AmChartPortlet';
+	p._type = 'AmChartPortlet';
+	p.serialize = DeepSee_AmChartPortlet_serialize;
+	p.getSettings = DeepSee_AmChartPortlet_getSettings;
+	p.ReallyRefreshContents = DeepSee_AmChartPortlet_ReallyRefreshContents;
+	p.adjustContentSize = DeepSee_AmChartPortlet_adjustContentSize;
+	p.connectToController = DeepSee_AmChartPortlet_connectToController;
+	p.disconnectFromController = DeepSee_AmChartPortlet_disconnectFromController;
+	p.getController = DeepSee_AmChartPortlet_getController;
+	p.notifyView = DeepSee_AmChartPortlet_notifyView;
+	p.renderContents = DeepSee_AmChartPortlet_renderContents;
+	p.sendEventToController = DeepSee_AmChartPortlet_sendEventToController;
+	p.setControllerId = DeepSee_AmChartPortlet_setControllerId;
+}
+/* EOF */]]></CSP>
+</Export>
