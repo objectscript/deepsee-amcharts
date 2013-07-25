@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="DeepSee.AmChartPortlet">
+<Super>%DeepSee.Component.Portlet.abstractPortlet</Super>
+<TimeCreated>62994,53554.161349</TimeCreated>
+
+<Parameter name="INCLUDEFILES">
+<Default>amcharts/amcharts.js</Default>
+</Parameter>
+
+<Method name="%OnGetPortletName">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[    quit "amChart"
+]]></Implementation>
+</Method>
+
+<Method name="%OnGetPortletIcon">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[    quit "deepsee/table_48.gif"
+]]></Implementation>
+</Method>
+
+<Method name="%OnGetPortletSettings">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>*pInfo:%List</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+#;  kill pInfo
+#;  // $LB(name,value,type,caption,title)
+#;
+#;  set pInfo($I(pInfo)) = $LB("pager",1,"%Boolean",$$$Text("pager","%DeepSee"),"")
+#;  set pInfo($I(pInfo)) = $LB("rownumbers",1,"%Boolean",$$$Text("rownumbers","%DeepSee"),"")
+#;  set pInfo($I(pInfo)) = $LB("viewrecords",1,"%Boolean",$$$Text("viewrecords","%DeepSee"),"")
+#;  set pInfo($I(pInfo)) = $LB("gridview",1,"%Boolean",$$$Text("gridview","%DeepSee"),"")
+#;  set pInfo($I(pInfo)) = $LB("filterToolbar",0,"%Boolean",$$$Text("filterToolbar","%DeepSee"),"")
+#;  set pInfo($I(pInfo)) = $LB("rowLabels",1,"%Boolean",$$$Text("rowLabels","%DeepSee"),"")
+        
+    quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="%DrawHTML">
+<Implementation><![CDATA[
+    // This causes ZEN to render this component on the client.
+    set ..renderFlag = ..renderFlag + 1
+    
+    // copy ..settings into properties
+#;  #dim propName As %String = $order(..settings(""))
+#;  while (propName '= "")
+#;  {
+#;      if ("" '= $get(..settings(propName)))
+#;          try
+#;          {
+#;              set $property($this, propName) = ..settings(propName)
+#;          }
+#;          catch {}
+#;
+#;      set propName = $order(..settings(propName))
+#;  }
+
+    &html<<div id="chartdiv" class="chartdiv" style="width: 500px; height: 600px;"></div>
+    // Это решает баг в портлете с запросом несуществующих функций
+    <script type='text/javascript'>
+        SVGAnimatedString.prototype.search = function () {return -1;};
+        SVGAnimatedString.prototype.split = function () {return [""]};
+    </script>
+    >
+]]></Implementation>
+</Method>
+
+<Method name="renderContents">
+<Description>
+Client-side method to render control.</Description>
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+       var chart;
+
+        var chartData = [{
+            year: 2005,
+            income: 23.5,
+            expenses: 18.1
+        }, {
+            year: 2006,
+            income: 26.2,
+            expenses: 22.8
+        }, {
+            year: 2007,
+            income: 30.1,
+            expenses: 23.9
+        }, {
+            year: 2008,
+            income: 29.5,
+            expenses: 25.1
+        }, {
+            year: 2009,
+            income: 24.6,
+            expenses: 25.0
+        }];
+
+    chart = new AmCharts.AmSerialChart();
+    chart.dataProvider = chartData;
+    chart.categoryField = "year";
+    chart.startDuration = 1;
+    chart.plotAreaBorderColor = "#DADADA";
+    chart.plotAreaBorderAlpha = 1;
+    // this single line makes the chart a bar chart          
+    chart.rotate = true;
+
+    // AXES
+    // Category
+    var categoryAxis = chart.categoryAxis;
+    categoryAxis.gridPosition = "start";
+    categoryAxis.gridAlpha = 0.1;
+    categoryAxis.axisAlpha = 0;
+
+    // Value
+    var valueAxis = new AmCharts.ValueAxis();
+    valueAxis.axisAlpha = 0;
+    valueAxis.gridAlpha = 0.1;
+    valueAxis.position = "top";
+    chart.addValueAxis(valueAxis);
+
+    // GRAPHS
+    // first graph
+    var graph1 = new AmCharts.AmGraph();
+    graph1.type = "column";
+    graph1.title = "Income";
+    graph1.valueField = "income";
+    graph1.balloonText = "Income:[[value]]";
+    graph1.lineAlpha = 0;
+    graph1.fillColors = "#ADD981";
+    graph1.fillAlphas = 1;
+    chart.addGraph(graph1);
+
+    // second graph
+    var graph2 = new AmCharts.AmGraph();
+    graph2.type = "column";
+    graph2.title = "Expenses";
+    graph2.valueField = "expenses";
+    graph2.balloonText = "Expenses:[[value]]";
+    graph2.lineAlpha = 0;
+    graph2.fillColors = "#81acd9";
+    graph2.fillAlphas = 1;
+    chart.addGraph(graph2);
+
+    // LEGEND
+    var legend = new AmCharts.AmLegend();
+    chart.addLegend(legend);
+
+    // WRITE
+    chart.write("chartdiv");
+    this.chart = chart;
+]]></Implementation>
+</Method>
+
+<Method name="adjustContentSize">
+<Description>
+Notification from the containing widget that the page is loaded or the widget is resized.
+Subclass can implement this, if they wish.</Description>
+<FormalSpec>load,width,height</FormalSpec>
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	
+	var obj=document.getElementById('chartdiv');
+	obj.style.width=width+'px';
+	obj.style.height=height+'px';
+	this.chart.invalidateSize();
+//	for (prop in obj) {
+//		if (!obj.hasOwnProperty(prop)) continue
+//		alert(prop+':'+obj[prop])
+//}
+]]></Implementation>
+</Method>
+</Class>
+</Export>
