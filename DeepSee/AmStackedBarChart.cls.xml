@@ -104,7 +104,7 @@
 // alert(controller.getLabel(1,labelDim));
 
 // add rows to grid
-//alert(JSON.stringify(props));
+//alert(JSON.stringify(props)); use this for debug
 return props;
 ]]></Implementation>
 </Method>
