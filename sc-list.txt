@@ -1,4 +1,5 @@
 <cspapp>
 DeepSee.Am3dPieChart.CLS
 DeepSee.AmChartPortlet.CLS
+DeepSee.AmColumnSimpleChart.CLS
 DeepSee.AmStackedBarChart.CLS

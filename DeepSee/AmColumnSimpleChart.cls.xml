@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="DeepSee.AmColumnSimpleChart">
+<Super>%DeepSee.Component.Portlet.abstractPortlet,%ZEN.Component.component</Super>
+<TimeCreated>63028,46882.866516</TimeCreated>
+
+<Parameter name="INCLUDEFILES">
+<Default>amcharts/amcharts.js</Default>
+</Parameter>
+
+<Property name="barColor">
+<Type>%String</Type>
+</Property>
+
+<Property name="captions">
+<Type>%String</Type>
+</Property>
+
+<Property name="captionsFromSource">
+<Type>%Boolean</Type>
+</Property>
+
+<Method name="%OnGetPortletName">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[    quit "amChartColumnSimpleChart"
+]]></Implementation>
+</Method>
+
+<Method name="%OnGetPortletIcon">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[    quit "deepsee/table_48.gif"
+]]></Implementation>
+</Method>
+
+<Method name="%OnGetPortletSettings">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>*pInfo:%List</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+ kill pInfo
+  // $LB(name,value,type,caption,title)
+#;
+  set pInfo($I(pInfo)) = $LB("barColor","dd66bb","%String",$$$Text("barColor","%DeepSee"),"")
+ set pInfo($I(pInfo)) = $LB("captionsFromSource",1,"%Boolean",$$$Text("Use captions from source","%DeepSee"),"")
+  set pInfo($I(pInfo)) = $LB("captions","","%String",$$$Text("Captions","%DeepSee"),"")
+#;  set pInfo($I(pInfo)) = $LB("gridview",1,"%Boolean",$$$Text("gridview","%DeepSee"),"")
+#;  set pInfo($I(pInfo)) = $LB("filterToolbar",0,"%Boolean",$$$Text("filterToolbar","%DeepSee"),"")
+#;  set pInfo($I(pInfo)) = $LB("rowLabels",1,"%Boolean",$$$Text("rowLabels","%DeepSee"),"")
+        
+    quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="getConnectedController">
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	// connect to controller
+	var controller = this.getController();
+	if (null == controller) 
+	{
+		// try to connect to dataController
+		this.connectToController();
+		controller = this.getController();
+	}
+	
+	return controller;
+]]></Implementation>
+</Method>
+
+<Method name="acquireData">
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	// clear old data
+	
+	// connect to controller
+	var controller = this.getConnectedController();
+	if (!controller) return;
+	
+	// are we connected to a pivot table?
+	var isPivot = controller.getSelectedRange;
+	if (!isPivot)
+	{
+		var labelDim = 2;
+		var seriesSize = controller.getDimSize(1);
+		var seriesCount = controller.getDimSize(2);
+	}
+	else
+	{
+		var labelDim = 1;
+		var seriesSize = controller.getDimSize(2);
+		var seriesCount = controller.getDimSize(1);
+	}
+
+	// populate props array
+	var props = [];
+	for(var yearVal=0;yearVal <  seriesCount;yearVal++)
+	{
+		//var propName = controller.getPropertyName(yearVal);
+		var propName = controller.getLabel(yearVal,labelDim);
+		if (!isPivot && propName.charAt(0) == '%') continue;  // KPI special columns
+		props[yearVal] = {name:this.captionsFromSource?propName:this.captions.split(',')[yearVal], index:yearVal}
+		props[yearVal].val=controller.getData(yearVal,0);
+	}
+// alert(props[t].name + " " + props[t].index);
+
+// alert(controller.getLabel(1,labelDim));
+
+// add rows to grid
+//alert(JSON.stringify(props));
+return props;
+]]></Implementation>
+</Method>
+
+<Method name="notifyViewHandler">
+<FormalSpec>reason,data1,data2,data3</FormalSpec>
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	switch(reason) 
+	{
+		case 'dataChange':
+			this.acquireData();
+			this.renderContents();
+			break;
+		case 'modelChange':
+			this.renderContents();
+			break;
+	}
+]]></Implementation>
+</Method>
+
+<Method name="%DrawHTML">
+<Implementation><![CDATA[
+    // This causes ZEN to render this component on the client.
+    set ..renderFlag = ..renderFlag + 1
+	#dim propName As %String = $order(..settings(""))
+	while (propName '= "")
+	{
+		if ("" '= $get(..settings(propName)))
+			try
+			{
+				set $property($this, propName) = ..settings(propName)
+			}
+			catch {}
+
+		set propName = $order(..settings(propName))
+	}
+	
+
+    &html<<div id="chartdivColumnSimple" class="chartdivColumnSimple" style="width: 300px; height: 300px;"></div>
+  <!--Это решает баг в портлете с запросом несуществующих функций  -->
+   <script type='text/javascript'>
+   
+        SVGAnimatedString.prototype.search = function () {return -1;};
+        SVGAnimatedString.prototype.split = function () {return [""]};
+    </script>
+    >
+]]></Implementation>
+</Method>
+
+<Method name="renderContents">
+<Description>
+Client-side method to render control.</Description>
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	
+	//Using ONLY rows
+       var chart;
+
+   var chartData=this.acquireData();
+    //alert(chartData);
+    
+    
+    // SERIAL CHART
+    chart = new AmCharts.AmSerialChart();
+    chart.dataProvider = chartData;
+    chart.categoryField = "name";
+    chart.startDuration = 1;
+
+    // AXES
+    // category
+    var categoryAxis = chart.categoryAxis;
+    categoryAxis.labelRotation = 90;
+    categoryAxis.gridPosition = "start";
+
+    // value
+    // in case you don't want to change default settings of value axis,
+    // you don't need to create it, as one value axis is created automatically.
+    // GRAPH
+    var graph = new AmCharts.AmGraph();
+    graph.valueField = "val";
+    graph.balloonText = "[[category]]: [[value]]";
+    graph.type = "column";
+    graph.lineAlpha = 0;
+    graph.fillAlphas = 1;
+    alert(this.barColor);
+    graph.fillColors =this.barColor? "#"+this.barColor : "#000000"
+    chart.addGraph(graph);
+    // WRITE
+    chart.write("chartdivColumnSimple");
+    this.chart = chart;
+]]></Implementation>
+</Method>
+
+<Method name="adjustContentSize">
+<Description>
+Notification from the containing widget that the page is loaded or the widget is resized.
+Subclass can implement this, if they wish.</Description>
+<FormalSpec>load,width,height</FormalSpec>
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	
+	var obj=document.getElementById('chartdivColumnSimple');
+	obj.style.width=width+'px';
+	obj.style.height=height+'px';
+	this.chart.invalidateSize();
+//	for (prop in obj) {
+//		if (!obj.hasOwnProperty(prop)) continue
+//		alert(prop+':'+obj[prop])
+//}
+]]></Implementation>
+</Method>
+</Class>
+</Export>
