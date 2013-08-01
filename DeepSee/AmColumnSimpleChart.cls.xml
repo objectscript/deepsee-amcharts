@@ -201,6 +201,7 @@ Client-side method to render control.</Description>
     alert(this.barColor);
     graph.fillColors =this.barColor? "#"+this.barColor : "#000000"
     chart.addGraph(graph);
+    chart.rotate = true;
     // WRITE
     chart.write("chartdivColumnSimple");
     this.chart = chart;

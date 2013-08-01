@@ -103,6 +103,24 @@ return props;
 ]]></Implementation>
 </Method>
 
+<Method name="notifyViewHandler">
+<FormalSpec>reason,data1,data2,data3</FormalSpec>
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	switch(reason) 
+	{
+		case 'dataChange':
+			this.acquireData();
+			this.renderContents();
+			break;
+		case 'modelChange':
+			this.renderContents();
+			break;
+	}
+]]></Implementation>
+</Method>
+
 <Method name="%DrawHTML">
 <Implementation><![CDATA[
     // This causes ZEN to render this component on the client.
