@@ -1,19 +1,34 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="Cache" version="25">
 <Class name="DeepSee.AmColumnSimpleChart">
-<Super>%DeepSee.Component.Portlet.abstractPortlet,%ZEN.Component.component</Super>
+<Super>%DeepSee.Component.Portlet.abstractPortlet,%ZEN.Component.page</Super>
 <TimeCreated>63028,46882.866516</TimeCreated>
 
+<UDLText name="T">
+<Content><![CDATA[
+// Parameter INCLUDEFILES = "amcharts/amcharts.js,jquery-ui.min.js,redmond.css,ui.jqgrid.css,jquery.min.js,grid.locale-ru.js,jquery.jqGrid.min.js,themeswitchertool.js";
+
+]]></Content>
+</UDLText>
+
 <Parameter name="INCLUDEFILES">
-<Default>amcharts/amcharts.js</Default>
+<Default>style:http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css,style:http://www.trirand.net/themes/ui.jqgrid.css,script:http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js,script:http://code.jquery.com/ui/1.10.3/jquery-ui.js,script:http://www.trirand.net/js/trirand/i18n/grid.locale-ru.js,script:http://www.trirand.net/js/trirand/jquery.jqGrid.min.js,script:themeswitchertool.js,script:amcharts/amcharts.js,style:sweetbuttons.css</Default>
 </Parameter>
 
 <Property name="barColor">
 <Type>%String</Type>
 </Property>
 
+<Property name="enableListing">
+<Type>%Boolean</Type>
+</Property>
+
 <Property name="captions">
 <Type>%String</Type>
+</Property>
+
+<Property name="pager">
+<Type>%Boolean</Type>
 </Property>
 
 <Property name="captionsFromSource">
@@ -23,14 +38,14 @@
 <Method name="%OnGetPortletName">
 <ClassMethod>1</ClassMethod>
 <ReturnType>%String</ReturnType>
-<Implementation><![CDATA[    quit "amChartColumnSimpleChart"
+<Implementation><![CDATA[    quit "AmCharts Simple Column Chart"
 ]]></Implementation>
 </Method>
 
 <Method name="%OnGetPortletIcon">
 <ClassMethod>1</ClassMethod>
 <ReturnType>%String</ReturnType>
-<Implementation><![CDATA[    quit "deepsee/table_48.gif"
+<Implementation><![CDATA[    quit "deepsee/ds_chart_bar.png"
 ]]></Implementation>
 </Method>
 
@@ -41,13 +56,12 @@
 <Implementation><![CDATA[
  kill pInfo
   // $LB(name,value,type,caption,title)
-#;
   set pInfo($I(pInfo)) = $LB("barColor","dd66bb","%String",$$$Text("barColor","%DeepSee"),"")
  set pInfo($I(pInfo)) = $LB("captionsFromSource",1,"%Boolean",$$$Text("Use captions from source","%DeepSee"),"")
   set pInfo($I(pInfo)) = $LB("captions","","%String",$$$Text("Captions","%DeepSee"),"")
-#;  set pInfo($I(pInfo)) = $LB("gridview",1,"%Boolean",$$$Text("gridview","%DeepSee"),"")
-#;  set pInfo($I(pInfo)) = $LB("filterToolbar",0,"%Boolean",$$$Text("filterToolbar","%DeepSee"),"")
-#;  set pInfo($I(pInfo)) = $LB("rowLabels",1,"%Boolean",$$$Text("rowLabels","%DeepSee"),"")
+	set pInfo($I(pInfo)) = $LB("pager",1,"%Boolean",$$$Text("pager","%DeepSee"),"")
+	set pInfo($I(pInfo)) = $LB("enableListing",0,"%Boolean",$$$Text("Детализация","%DeepSee"),"")
+	
         
     quit $$$OK
 ]]></Implementation>
@@ -74,7 +88,9 @@
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
-	// clear old data
+	
+	
+	
 	
 	// connect to controller
 	var controller = this.getConnectedController();
@@ -94,7 +110,8 @@
 		var seriesSize = controller.getDimSize(2);
 		var seriesCount = controller.getDimSize(1);
 	}
-
+	
+	//For amcharts
 	// populate props array
 	var props = [];
 	for(var yearVal=0;yearVal <  seriesCount;yearVal++)
@@ -105,12 +122,7 @@
 		props[yearVal] = {name:this.captionsFromSource?propName:this.captions.split(',')[yearVal], index:yearVal}
 		props[yearVal].val=controller.getData(yearVal,0);
 	}
-// alert(props[t].name + " " + props[t].index);
-
-// alert(controller.getLabel(1,labelDim));
-
-// add rows to grid
-//alert(JSON.stringify(props));
+	
 return props;
 ]]></Implementation>
 </Method>
@@ -120,11 +132,14 @@ return props;
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
+
+	
 	switch(reason) 
 	{
 		case 'dataChange':
 			this.acquireData();
 			this.renderContents();
+			
 			break;
 		case 'modelChange':
 			this.renderContents();
@@ -135,6 +150,7 @@ return props;
 
 <Method name="%DrawHTML">
 <Implementation><![CDATA[
+	
     // This causes ZEN to render this component on the client.
     set ..renderFlag = ..renderFlag + 1
 	#dim propName As %String = $order(..settings(""))
@@ -151,14 +167,149 @@ return props;
 	}
 	
 
-    &html<<div id="chartdivColumnSimple" class="chartdivColumnSimple" style="width: 300px; height: 300px;"></div>
+    &html<
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+    <script type="text/javascript">
+	//Need to storage Handler in WINDOW - bad((    
+    var lbClickHandler=function(input,cont) {
+		if((!cont)||(!input)) return;
+	    var selR=cont.getSelectedRange();
+	    if (!selR) {
+	    	alert("Требуется выбрать ячейчку для показа детализации");
+	    	return;
+	    }
+	    var isListing = !(jQuery("#listingButton"+input).attr("myparam")=="Graph");
+	    if (isListing) 
+	    {
+		    jQuery("#listingButton"+input)[0].src="deepsee/ds2_binoculars_44.png";
+		    jQuery("#listingButton"+input).attr("myparam","Graph");
+		    jQuery('#wrapper'+input).hide();
+	    	jQuery('#grid'+input).hide(1000);
+	    	
+		    jQuery('#chartdivColumnSimple'+input).show();
+		    cont.fireOnUpdateEvent();
+	    }
+	    else{
+	    var curQuery=cont.GetCurrentQueryText();
+	    var gridData=JSON.parse(#server(DeepSee.AmColumnSimpleChart.GetListingSql(curQuery,selR.toString()))#);
+	    //console.log(#server(DeepSee.AmColumnSimpleChart.GetListingSql(curQuery,selR.toString()))#);
+	    var colModel=[];
+	    var colNames=[];
+		for (var key in gridData[0]) colModel.push({"name":key,"index":key});
+	    for (var key in gridData[0]) colNames.push(key);
+	    
+	    jQuery("#grid"+input).GridUnload();
+		jQuery("#grid"+input).jqGrid({
+		datatype: 'local',
+		pager: '#pager'+input
+		, data:gridData
+		, rownumbers: this.rownumbers // A new column at left of the grid is added. The purpose of this column is to count the number of available rows, beginning from 1.
+		, viewrecords: this.viewrecords // jqGrid displays the beginning and ending record number in the grid
+		, gridview: this.gridview
+		, colNames: colNames
+		, colModel: colModel
+		, rowNum:10
+		, rowList:[10,20,30]
+		
+	});
+		jQuery("#grid"+input).jqGrid('navGrid','#pager'+input,{edit:false,add:false,del:false,position: 'left'});
+		
+		jQuery("#grid").jqGrid('filterToolbar', {searchOnEnter:false});
+
+
+	    jQuery('#chartdivColumnSimple'+input).hide(1000);
+	    jQuery('#wrapper'+input).show();
+	    jQuery('#grid'+input).show(1000);
+	    jQuery('#listingButton'+input)[0].src="deepsee/ds2_dialpad_44.png";
+	    jQuery("#listingButton"+input).attr("myparam","Listing");
+	    zenPage.onAdjustSizes();
+	    }
+	    return;
+	    }
+    </script>
+     
+    <div id="chartdivColumnSimple#(..index)#" class="chartdivColumnSimple" style="width: 300px; height: 300px;"></div>
+    	<div id="wrapper#(..index)#" style="display:none;"><table id="grid#(..index)#" style="width:100%; height:100%;"></table>>
+	&html<<div id="pager#(..index)#"></div>>
+	&html<</div>
   <!--Это решает баг в портлете с запросом несуществующих функций  -->
    <script type='text/javascript'>
-   
         SVGAnimatedString.prototype.search = function () {return -1;};
         SVGAnimatedString.prototype.split = function () {return [""]};
     </script>
     >
+]]></Implementation>
+</Method>
+
+<Method name="GetListingSql">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>inMDX,inrange</FormalSpec>
+<Implementation><![CDATA[
+	try {
+	// Run the query that was last run in this KPI (this populated the table we are selecting from)
+	//set MDXDefault="SELECT NON EMPTY {[DateOfSale].[Actual].[YearSold].NOW, [DateOfSale].[Actual].[YearSold].[NOW-1]} ON 0,NON EMPTY [Product].[P1].[Product Name].Members ON 1 FROM [HoleFoods]"
+	set tMDX=inMDX
+	 
+	// Create a resultset to get the table currently being displayed (this is guaranteed cached and so should be fast)
+	set tOrigRS=##class(%DeepSee.ResultSet).%ExecuteDirect(tMDX,,.tSC)
+	
+	// Now that we have a resultset, get the appropriate MDX filters that correspond to the selected cell(s)
+	
+			for ii=1:1:4 {
+				set range(ii)=$piece(inrange,",",ii)
+			}
+	do tOrigRS.%GetFiltersForCellRange(.tFilters,range(1),range(2),range(3),range(4))
+	
+	// The listing is actually the result of a DRILLTHROUGH query, so we need to run another 
+	// resultset that populates the <cube>.Listing table using the MDX drillthrough and provides
+	// the correct SQL to read the results.
+	// Start with the base (one-cell) query on the cube:
+	set tNewMDX="DRILLTHROUGH SELECT FROM "_tOrigRS.%CubeKey
+	
+	// Add the filters corresponding to the widget selection:
+	set idx=$order(tFilters(""))
+	while idx'="" {
+		set tNewMDX=tNewMDX_" %FILTER "_tFilters(idx)
+		set idx=$order(tFilters(idx))
+	}
+	
+	// Run the DRILLTHROUGH query built above to populate the listing table and create the needed SQL
+	set tDrillRS=##class(%DeepSee.ResultSet).%ExecuteDirect(tNewMDX)
+	
+	// Get the generic listing SQL of the source data for this subquery
+	set rsSQL=tDrillRS.%GetListingSQL()
+	
+	// The SQL returned just above selects all fields in the source table. 
+	}
+	catch ex {
+		// Store the error in the designated SQLError global.
+		// The listing will still execute as the default listing.
+	}
+	// Return the new SQL
+	set tStatement = ##class(%SQL.Statement).%New()
+	set tStatus = tStatement.%Prepare(rsSQL)
+	set RS=tStatement.%Execute()
+	SET colNum=tStatement.%Metadata.columns.Count()
+	s sc="" 
+	set ans="["
+	s sc=RS.%Next()
+	q:sc=0
+	for  {
+		
+		set ans=ans_"{"
+		
+		for i=1:1:colNum {
+			SET column=tStatement.%Metadata.columns.GetAt(i)
+			set ans=ans_""""_column.colName_""":"_""""_RS.%GetData(i)_""""
+			set:i'=colNum ans=ans_","
+		}
+		set ans=ans_"}"
+		s sc=RS.%Next() 
+		if (sc=0) {quit}
+		set ans=ans_","
+		}
+		set ans=ans_"]"
+	Q ans
 ]]></Implementation>
 </Method>
 
@@ -168,12 +319,26 @@ Client-side method to render control.</Description>
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
-	
-	//Using ONLY rows
-       var chart;
+	//Delete previous buttons
+	jQuery("#listingButton"+this.index+", #listingTD"+this.index).remove();
 
-   var chartData=this.acquireData();
-    //alert(chartData);
+	//Magical button adding to widget's header
+	if(this.enableListing) {jQuery('*[id="'+this.getConnectedController().id.split("/")[0]+'"] .dswidgetHeader table.group tr').first().append('<td id="listingTD'+this.index+'" style="padding-right: 6px;vertical-align: bottom;"><img title="Show Listing" id="listingButton'+this.index+'" myparam="Graph" src="deepsee/ds2_binoculars_44.png"></img></td>');}
+  	
+  	
+  	//Initiallize onClick function for listing button
+  	var selfIndex=this.index;
+  	var contr=this.getConnectedController();
+   	jQuery("#listingButton"+this.index).click(function(){
+	   lbClickHandler(selfIndex,contr);
+	   });
+
+	
+	
+	//AmCharts Chart Start Point
+       var chart;
+       var chartData=this.acquireData();
+   
     
     
     // SERIAL CHART
@@ -197,14 +362,21 @@ Client-side method to render control.</Description>
     graph.balloonText = "[[category]]: [[value]]";
     graph.type = "column";
     graph.lineAlpha = 0;
-    graph.fillAlphas = 1;
-    alert(this.barColor);
+    graph.fillAlphas = 0.5;
+    graph.alphaField= "fill";
+    
     graph.fillColors =this.barColor? "#"+this.barColor : "#000000"
     chart.addGraph(graph);
     chart.rotate = true;
-    // WRITE
-    chart.write("chartdivColumnSimple");
+    var temppivot = this.getConnectedController(); //need this @clickGraphItem event
+    chart.write("chartdivColumnSimple"+this.index);
     this.chart = chart;
+        chart.addListener("clickGraphItem", 
+    	function (event) {
+	    	event.item.dataContext.fill = 1;
+        	event.chart.validateData();
+    	   	temppivot.selectCellRange(event.index+1,0,event.index+1,0);
+  });
 ]]></Implementation>
 </Method>
 
@@ -217,14 +389,12 @@ Subclass can implement this, if they wish.</Description>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
 	
-	var obj=document.getElementById('chartdivColumnSimple');
+	var obj=document.getElementById('chartdivColumnSimple'+this.index);
 	obj.style.width=width+'px';
 	obj.style.height=height+'px';
 	this.chart.invalidateSize();
-//	for (prop in obj) {
-//		if (!obj.hasOwnProperty(prop)) continue
-//		alert(prop+':'+obj[prop])
-//}
+	jQuery("#grid"+this.index).setGridWidth(width - 4);
+	jQuery("#grid"+this.index).setGridHeight(height - 1 - jQuery("#gbox_grid"+this.index).height() + jQuery("#gbox_grid"+this.index+" .ui-jqgrid-bdiv").height());
 ]]></Implementation>
 </Method>
 </Class>
