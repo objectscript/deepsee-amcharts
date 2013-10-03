@@ -1,5 +1,12 @@
 <cspapp>
+DeepSee.AbstractAmChart.CLS
 DeepSee.Am3dPieChart.CLS
+DeepSee.Am3dStackedColumnChart.CLS
 DeepSee.AmChartPortlet.CLS
 DeepSee.AmColumnSimpleChart.CLS
+DeepSee.AmLineMulAxesChart.CLS
+DeepSee.AmPyramidChart.CLS
+DeepSee.AmSmoothedLineChart.CLS
 DeepSee.AmStackedBarChart.CLS
+DeepSee.JQGridPortlet.CLS
+DeepSee.ListingInterface.CLS

@@ -1,17 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="Cache" version="25">
 <Class name="DeepSee.AmStackedBarChart">
-<Super>%DeepSee.Component.Portlet.abstractPortlet</Super>
+<Super>AbstractAmChart</Super>
 <TimeCreated>63026,69808.341377</TimeCreated>
-
-<Parameter name="INCLUDEFILES">
-<Default>amcharts/amcharts.js</Default>
-</Parameter>
 
 <Method name="%OnGetPortletName">
 <ClassMethod>1</ClassMethod>
 <ReturnType>%String</ReturnType>
-<Implementation><![CDATA[    quit "amChartStackedBarChart"
+<Implementation><![CDATA[    quit "AmCharts: Stacked Bar Chart"
 ]]></Implementation>
 </Method>
 
@@ -19,42 +15,6 @@
 <ClassMethod>1</ClassMethod>
 <ReturnType>%String</ReturnType>
 <Implementation><![CDATA[    quit "deepsee/table_48.gif"
-]]></Implementation>
-</Method>
-
-<Method name="%OnGetPortletSettings">
-<ClassMethod>1</ClassMethod>
-<FormalSpec>*pInfo:%List</FormalSpec>
-<ReturnType>%Status</ReturnType>
-<Implementation><![CDATA[
-#;  kill pInfo
-#;  // $LB(name,value,type,caption,title)
-#;
-#;  set pInfo($I(pInfo)) = $LB("pager",1,"%Boolean",$$$Text("pager","%DeepSee"),"")
-#;  set pInfo($I(pInfo)) = $LB("rownumbers",1,"%Boolean",$$$Text("rownumbers","%DeepSee"),"")
-#;  set pInfo($I(pInfo)) = $LB("viewrecords",1,"%Boolean",$$$Text("viewrecords","%DeepSee"),"")
-#;  set pInfo($I(pInfo)) = $LB("gridview",1,"%Boolean",$$$Text("gridview","%DeepSee"),"")
-#;  set pInfo($I(pInfo)) = $LB("filterToolbar",0,"%Boolean",$$$Text("filterToolbar","%DeepSee"),"")
-#;  set pInfo($I(pInfo)) = $LB("rowLabels",1,"%Boolean",$$$Text("rowLabels","%DeepSee"),"")
-        
-    quit $$$OK
-]]></Implementation>
-</Method>
-
-<Method name="getConnectedController">
-<Language>javascript</Language>
-<ClientMethod>1</ClientMethod>
-<Implementation><![CDATA[
-	// connect to controller
-	var controller = this.getController();
-	if (null == controller) 
-	{
-		// try to connect to dataController
-		this.connectToController();
-		controller = this.getController();
-	}
-	
-	return controller;
 ]]></Implementation>
 </Method>
 
@@ -97,62 +57,9 @@
 		var tempStr=controller.getLabel(p,labelDim)
 		props[yearVal][p]=controller.getData(p,yearVal);
 		props[yearVal].names[p]=tempStr;
-}
 	}
-// alert(props[t].name + " " + props[t].index);
-
-// alert(controller.getLabel(1,labelDim));
-
-// add rows to grid
-//alert(JSON.stringify(props)); use this for debug
+	}
 return props;
-]]></Implementation>
-</Method>
-
-<Method name="notifyViewHandler">
-<FormalSpec>reason,data1,data2,data3</FormalSpec>
-<Language>javascript</Language>
-<ClientMethod>1</ClientMethod>
-<Implementation><![CDATA[
-	switch(reason) 
-	{
-		case 'dataChange':
-			this.acquireData();
-			this.renderContents();
-			break;
-		case 'modelChange':
-			this.renderContents();
-			break;
-	}
-]]></Implementation>
-</Method>
-
-<Method name="%DrawHTML">
-<Implementation><![CDATA[
-    // This causes ZEN to render this component on the client.
-    set ..renderFlag = ..renderFlag + 1
-    // copy ..settings into properties
-#;  #dim propName As %String = $order(..settings(""))
-#;  while (propName '= "")
-#;  {
-#;      if ("" '= $get(..settings(propName)))
-#;          try
-#;          {
-#;              set $property($this, propName) = ..settings(propName)
-#;          }
-#;          catch {}
-#;
-#;      set propName = $order(..settings(propName))
-#;  }
-
-    &html<<div id="chartdiv" class="chartdiv" style="width: 500px; height: 600px;"></div>
-    // Это решает баг в портлете с запросом несуществующих функций
-    
-   <script type='text/javascript'> 
-        SVGAnimatedString.prototype.search = function () {return -1;};
-        SVGAnimatedString.prototype.split = function () {return [""]};
-    </script>
-    >
 ]]></Implementation>
 </Method>
 
@@ -162,12 +69,12 @@ Client-side method to render control.</Description>
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
-       var chart;
-
-   var chartData=this.acquireData();
-    //alert(chartData);
+	renderListingButton(this);
+    var chart;
+	var chartData=this.acquireData();
     
-     // SERIALL CHART
+    /*
+     // SERIAL CHART
     chart = new AmCharts.AmSerialChart();
     chart.dataProvider = chartData;
     chart.categoryField = "year";
@@ -195,7 +102,7 @@ Client-side method to render control.</Description>
     chart.plotAreaBorderAlpha = 1;
     // this single line makes the chart a bar chart          
     chart.rotate = true;
-var graph = new Array;
+	var graph = new Array;
 	for(var i=0;i<chartData[0].sC;i++)
 	{
 	graph[i] = new AmCharts.AmGraph();
@@ -204,10 +111,10 @@ var graph = new Array;
     graph[i].valueField = i.toString();
     graph[i].balloonText = chartData[0].names[i]+":[[value]]";
     graph[i].lineAlpha = 0;
-    graph[i].fillColors = "#"+Math.floor(((Math.random()*100)%10))+"D"+Math.floor(((Math.random()*100)%10))+"981";
+    graph[i].fillColors = AmCharts.randomColor();
     graph[i].fillAlphas = 1;
     chart.addGraph(graph[i]);
-		}
+	}
    
    
     
@@ -217,28 +124,75 @@ var graph = new Array;
     chart.addLegend(legend);
 
     // WRITE
-    chart.write("chartdiv");
+    chart.write("amchart"+this.index);
     this.chart = chart;
-]]></Implementation>
-</Method>
-
-<Method name="adjustContentSize">
-<Description>
-Notification from the containing widget that the page is loaded or the widget is resized.
-Subclass can implement this, if they wish.</Description>
-<FormalSpec>load,width,height</FormalSpec>
-<Language>javascript</Language>
-<ClientMethod>1</ClientMethod>
-<Implementation><![CDATA[
+    */
+    
+    chart = new AmCharts.AmSerialChart();
+    chart.dataProvider = chartData;
+    chart.categoryField = "year";
+    chart.plotAreaBorderAlpha = 0.2;
+    chart.rotate = true;
+    
+    // AXES
+    // Category
+    var categoryAxis = chart.categoryAxis;
+    categoryAxis.gridAlpha = 0.1;
+    categoryAxis.axisAlpha = 0;
+    categoryAxis.gridPosition = "start";
+    
+    // value                      
+    var valueAxis = new AmCharts.ValueAxis();
+    valueAxis.stackType = "regular";
+    valueAxis.gridAlpha = 0.1;
+    valueAxis.axisAlpha = 0;
+    chart.addValueAxis(valueAxis);
+    
+    // GRAPHS
+    // firstgraph 
+    var graph = new Array;
+    for(var i=0;i<chartData[0].sC;i++)
+	{
+	graph[i] = new AmCharts.AmGraph();
+    graph[i].type = "column";
+    graph[i].title = chartData[0].names[i];
+    graph[i].valueField = i.toString();
+    graph[i].balloonText = chartData[0].names[i]+":[[value]]";
+    graph[i].lineAlpha = 0;
+    graph[i].fillColors = AmCharts.randomColor();
+    graph[i].fillAlphas = 0.75;
+    chart.addGraph(graph[i]);
+	}
 	
-	var obj=document.getElementById('chartdiv');
-	obj.style.width=width+'px';
-	obj.style.height=height+'px';
-	this.chart.invalidateSize();
-//	for (prop in obj) {
-//		if (!obj.hasOwnProperty(prop)) continue
-//		alert(prop+':'+obj[prop])
-//}
+   
+    
+    
+    // LEGEND
+    var legend = new AmCharts.AmLegend();
+    legend.position = "right";
+    legend.borderAlpha = 0.3;
+    legend.horizontalGap = 10;
+    legend.switchType = "v";
+    chart.addLegend(legend);
+    
+    // WRITE
+    chart.write("amchart"+this.index);
+    this.chart=chart;
+    //This part is for ONclick
+    var temppivot = this.getConnectedController(); //need this @clickGraphItem event
+        chart.addListener("clickGraphItem", 
+    	function (event) {
+	   		
+	   		for(var i=0;i<event.chart.graphs.length;i++)
+	   		{
+		   		event.chart.graphs[i].fillAlphas=0.75;
+	   		}
+	   		event.graph.fillAlphas = 1;
+        	event.chart.validateNow();
+        	console.log(event);
+    	   	temppivot.selectCellRange(event.graph.index+1,0,event.graph.index+1,0);
+    	   	return false;
+  });
 ]]></Implementation>
 </Method>
 </Class>

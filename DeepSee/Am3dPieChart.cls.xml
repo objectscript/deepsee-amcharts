@@ -1,17 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="Cache" version="25">
 <Class name="DeepSee.Am3dPieChart">
-<Super>%DeepSee.Component.Portlet.abstractPortlet</Super>
+<Super>AbstractAmChart</Super>
 <TimeCreated>63026,70397.387274</TimeCreated>
-
-<Parameter name="INCLUDEFILES">
-<Default>amcharts/amcharts.js</Default>
-</Parameter>
 
 <Method name="%OnGetPortletName">
 <ClassMethod>1</ClassMethod>
 <ReturnType>%String</ReturnType>
-<Implementation><![CDATA[    quit "amChart3dPieChart"
+<Implementation><![CDATA[    quit "AmCharts: 3dPieChart"
 ]]></Implementation>
 </Method>
 
@@ -22,43 +18,9 @@
 ]]></Implementation>
 </Method>
 
-<Method name="%OnGetPortletSettings">
-<ClassMethod>1</ClassMethod>
-<FormalSpec>*pInfo:%List</FormalSpec>
-<ReturnType>%Status</ReturnType>
-<Implementation><![CDATA[
-#;  kill pInfo
-#;  // $LB(name,value,type,caption,title)
-#;
-#;  set pInfo($I(pInfo)) = $LB("pager",1,"%Boolean",$$$Text("pager","%DeepSee"),"")
-#;  set pInfo($I(pInfo)) = $LB("rownumbers",1,"%Boolean",$$$Text("rownumbers","%DeepSee"),"")
-#;  set pInfo($I(pInfo)) = $LB("viewrecords",1,"%Boolean",$$$Text("viewrecords","%DeepSee"),"")
-#;  set pInfo($I(pInfo)) = $LB("gridview",1,"%Boolean",$$$Text("gridview","%DeepSee"),"")
-#;  set pInfo($I(pInfo)) = $LB("filterToolbar",0,"%Boolean",$$$Text("filterToolbar","%DeepSee"),"")
-#;  set pInfo($I(pInfo)) = $LB("rowLabels",1,"%Boolean",$$$Text("rowLabels","%DeepSee"),"")
-        
-    quit $$$OK
-]]></Implementation>
-</Method>
-
-<Method name="getConnectedController">
-<Language>javascript</Language>
-<ClientMethod>1</ClientMethod>
-<Implementation><![CDATA[
-	// connect to controller
-	var controller = this.getController();
-	if (null == controller) 
-	{
-		// try to connect to dataController
-		this.connectToController();
-		controller = this.getController();
-	}
-	
-	return controller;
-]]></Implementation>
-</Method>
-
 <Method name="acquireData">
+<Description>
+This method gets data from controller and converts it to the right structure</Description>
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
@@ -93,59 +55,8 @@
 		props[yearVal] = {name:propName, index:yearVal}
 		props[yearVal].val=controller.getData(yearVal,0);
 	}
-// alert(props[t].name + " " + props[t].index);
 
-// alert(controller.getLabel(1,labelDim));
-
-// add rows to grid
-//alert(JSON.stringify(props));
 return props;
-]]></Implementation>
-</Method>
-
-<Method name="notifyViewHandler">
-<FormalSpec>reason,data1,data2,data3</FormalSpec>
-<Language>javascript</Language>
-<ClientMethod>1</ClientMethod>
-<Implementation><![CDATA[
-	switch(reason) 
-	{
-		case 'dataChange':
-			this.acquireData();
-			this.renderContents();
-			break;
-		case 'modelChange':
-			this.renderContents();
-			break;
-	}
-]]></Implementation>
-</Method>
-
-<Method name="%DrawHTML">
-<Implementation><![CDATA[
-    // This causes ZEN to render this component on the client.
-    set ..renderFlag = ..renderFlag + 1
-    // copy ..settings into properties
-#;  #dim propName As %String = $order(..settings(""))
-#;  while (propName '= "")
-#;  {
-#;      if ("" '= $get(..settings(propName)))
-#;          try
-#;          {
-#;              set $property($this, propName) = ..settings(propName)
-#;          }
-#;          catch {}
-#;
-#;      set propName = $order(..settings(propName))
-#;  }
-
-    &html<<div id="chartdivPie" class="chartdivPie" style="width: 300px; height: 300px;"></div>
-  <!--Это решает баг в портлете с запросом несуществующих функций  -->
-   <script type='text/javascript'>
-        SVGAnimatedString.prototype.search = function () {return -1;};
-        SVGAnimatedString.prototype.split = function () {return [""]};
-    </script>
-    >
 ]]></Implementation>
 </Method>
 
@@ -155,12 +66,12 @@ Client-side method to render control.</Description>
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
-	
-	//Using ONLY rows
-       var chart;
-
-   var chartData=this.acquireData();
-    //alert(chartData);
+	renderListingButton(this);
+       
+       
+    var chart;
+    var chartData=this.acquireData();
+   
     
     
     // PIE CHART
@@ -170,34 +81,26 @@ Client-side method to render control.</Description>
     chart.valueField = "val";
     chart.outlineColor = "#FFFFFF";
     chart.outlineAlpha = 0.8;
+    chart.fillAlphas = 0.5;
+    chart.alphaField= "fill";
     chart.outlineThickness = 2;
     // this makes the chart 3D
     chart.depth3D = 15;
     chart.angle = 30;
-
+	console.log(chart);
     // WRITE
-    chart.write("chartdivPie");
+    chart.write("amchart"+this.index);
     this.chart = chart;
-]]></Implementation>
-</Method>
-
-<Method name="adjustContentSize">
-<Description>
-Notification from the containing widget that the page is loaded or the widget is resized.
-Subclass can implement this, if they wish.</Description>
-<FormalSpec>load,width,height</FormalSpec>
-<Language>javascript</Language>
-<ClientMethod>1</ClientMethod>
-<Implementation><![CDATA[
-	
-	var obj=document.getElementById('chartdivPie');
-	obj.style.width=width+'px';
-	obj.style.height=height+'px';
-	this.chart.invalidateSize();
-//	for (prop in obj) {
-//		if (!obj.hasOwnProperty(prop)) continue
-//		alert(prop+':'+obj[prop])
-//}
+    
+     //This part is for ONclick
+    var temppivot = this.getConnectedController(); //need this @clickGraphItem event
+        chart.addListener("clickSlice", 
+    	function (event) {
+	    	console.log(event);	    
+	    	
+    	   	temppivot.selectCellRange(event.dataItem.index+1,0,event.dataItem.index+1,0);
+    	   	return false;
+  });
 ]]></Implementation>
 </Method>
 </Class>
