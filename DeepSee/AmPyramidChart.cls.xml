@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="DeepSee.AmPyramidChart">
+<Super>AbstractAmChart</Super>
+<TimeCreated>63098,51979.78554</TimeCreated>
+
+<Method name="%OnGetPortletName">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[    quit "AmCharts: Pyramid Chart"
+]]></Implementation>
+</Method>
+
+<Method name="%OnGetPortletIcon">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[    quit "deepsee/table_48.gif"
+]]></Implementation>
+</Method>
+
+<Method name="acquireData">
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	
+	
+	
+	
+	// connect to controller
+	var controller = this.getConnectedController();
+	if (!controller) return;
+	
+	// are we connected to a pivot table?
+	var isPivot = controller.getSelectedRange;
+	if (!isPivot)
+	{
+		var labelDim = 2;
+		var seriesSize = controller.getDimSize(1);
+		var seriesCount = controller.getDimSize(2);
+	}
+	else
+	{
+		var labelDim = 1;
+		var seriesSize = controller.getDimSize(2);
+		var seriesCount = controller.getDimSize(1);
+	}
+	
+	//For amcharts
+	// populate props array
+	var props = [];
+	for(var yearVal=0;yearVal <  seriesCount;yearVal++)
+	{
+		//var propName = controller.getPropertyName(yearVal);
+		var propName = controller.getLabel(yearVal,labelDim);
+		if (!isPivot && propName.charAt(0) == '%') continue;  // KPI special columns
+		props[yearVal] = {name:propName}
+		props[yearVal].val=controller.getData(yearVal,0);
+	}
+	
+return props;
+]]></Implementation>
+</Method>
+
+<Method name="renderContents">
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	
+	renderListingButton(this);
+
+	//AmCharts Chart Start Point
+       var chart;
+       var chartData=this.acquireData();
+   
+    
+  
+    
+    chart = new AmCharts.AmFunnelChart();
+    chart.rotate = true;
+    chart.titleField = "name";
+    chart.balloon.fixedPosition = true;
+    chart.marginRight = 230;
+    chart.marginLeft = 15;
+    chart.labelPosition = "right";
+    chart.funnelAlpha = 0.9;
+    chart.valueField = "val";
+    chart.startX = -500;
+    chart.dataProvider = chartData;
+    chart.startAlpha = 0;
+    chart.labelText = this.hintText?this.hintText:"[[title]]:[[val]]";
+    chart.write("amchart"+this.index);
+    this.chart=chart;
+    //This part is for ONclick
+    var temppivot = this.getConnectedController(); //need this @clickGraphItem event
+        chart.addListener("clickSlice", 
+    	function (event) {
+	    	console.log(event);
+    	   	temppivot.selectCellRange(event.dataItem.index+1,0,event.dataItem.index+1,0);
+  });
+]]></Implementation>
+</Method>
+</Class>
+</Export>

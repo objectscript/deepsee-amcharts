@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="DeepSee.AbstractAmChart">
+<Super>%DeepSee.Component.Portlet.abstractPortlet,%ZEN.Component.page,DeepSee.ListingInterface</Super>
+<TimeCreated>63098,52064.593511</TimeCreated>
+
+<Parameter name="INCLUDEFILES">
+<Default>style:http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css,style:http://www.trirand.net/themes/ui.jqgrid.css,script:http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js,script:http://code.jquery.com/ui/1.10.3/jquery-ui.js,script:http://www.trirand.net/js/trirand/i18n/grid.locale-ru.js,script:http://www.trirand.net/js/trirand/jquery.jqGrid.min.js,script:themeswitchertool.js</Default>
+</Parameter>
+
+<Parameter name="visible">
+<Default>0</Default>
+</Parameter>
+
+<Property name="barColor">
+<Type>%String</Type>
+</Property>
+
+<Property name="enableListing">
+<Type>%Boolean</Type>
+</Property>
+
+<Property name="hintText">
+<Type>%String</Type>
+</Property>
+
+<Property name="captions">
+<Type>%String</Type>
+</Property>
+
+<Property name="pager">
+<Type>%Boolean</Type>
+</Property>
+
+<Property name="captionsFromSource">
+<Type>%Boolean</Type>
+</Property>
+
+<Method name="%OnGetPortletSettings">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>*pInfo:%List</FormalSpec>
+<ReturnType>%Status</ReturnType>
+<Implementation><![CDATA[
+ 	kill pInfo
+  // $LB(name,value,type,caption,title)
+  	set pInfo($I(pInfo)) = $LB("barColor","","%String",$$$Text("barColor","DeepSee"),"")
+ 	set pInfo($I(pInfo)) = $LB("captionsFromSource",1,"%Boolean",$$$Text("Use captions from source","DeepSee"),"")
+  	set pInfo($I(pInfo)) = $LB("captions","","%String",$$$Text("Captions","DeepSee"),"")
+	set pInfo($I(pInfo)) = $LB("pager",1,"%Boolean",$$$Text("pager","DeepSee"),"")
+	set pInfo($I(pInfo)) = $LB("enableListing",0,"%Boolean",$$$Text("Детализация","DeepSee"),"")
+	set pInfo($I(pInfo)) = $LB("hintText","","%String",$$$Text("Текст в подсказке","DeepSee"),"")
+ 	
+        
+    quit $$$OK
+]]></Implementation>
+</Method>
+
+<Method name="getConnectedController">
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	// connect to controller
+	var controller = this.getController();
+	if (null == controller) 
+	{
+		// try to connect to dataController
+		this.connectToController();
+		controller = this.getController();
+	}
+	
+	return controller;
+]]></Implementation>
+</Method>
+
+<Method name="notifyViewHandler">
+<FormalSpec>reason,data1,data2,data3</FormalSpec>
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+
+	
+	switch(reason) 
+	{
+		case 'dataChange':
+			this.acquireData();
+			this.renderContents();
+			
+			break;
+		case 'modelChange':
+			this.renderContents();
+			break;
+	}
+]]></Implementation>
+</Method>
+
+<Method name="%DrawHTML">
+<Implementation><![CDATA[
+	
+    // This causes ZEN to render this component on the client.
+    set ..renderFlag = ..renderFlag + 1
+	#dim propName As %String = $order(..settings(""))
+	while (propName '= "")
+	{
+		if ("" '= $get(..settings(propName)))
+			try
+			{
+				set $property($this, propName) = ..settings(propName)
+			}
+			catch {}
+
+		set propName = $order(..settings(propName))
+	}
+	
+ &html<<div id="amchart#(..index)#" class="amchart#(..index)#" style="width: 300px; height: 300px;margin:5px;"></div>
+	<div id="wrapper#(..index)#" style="display:none;"><table id="grid#(..index)#" style="width:100%; height:100%;"></table>
+	<div id="pager#(..index)#"></div>
+	</div>
+  	<!--Это решает баг в портлете с запросом несуществующих функций  -->
+   	<script type='text/javascript'>
+        SVGAnimatedString.prototype.search = function () {return -1;};
+        SVGAnimatedString.prototype.split = function () {return [""]};
+   </script>
+   <script type='text/javascript' src='http://www.amcharts.com/lib/3/amcharts.js'></script>
+   <script type='text/javascript' src='http://www.amcharts.com/lib/3/funnel.js'></script>
+    <script type='text/javascript' src='http://www.amcharts.com/lib/3/serial.js'></script>
+    <script src="http://www.amcharts.com/lib/3/pie.js" type="text/javascript"></script>
+  
+    >
+	d ##class(DeepSee.ListingInterface).DrawHTML()
+]]></Implementation>
+</Method>
+
+<Method name="adjustContentSize">
+<Description>
+Notification from the containing widget that the page is loaded or the widget is resized.
+Subclass can implement this, if they wish.</Description>
+<FormalSpec>load,width,height</FormalSpec>
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	
+	var obj=document.getElementById('amchart'+this.index);
+	obj.style.width=width+'px';
+	obj.style.height=height+'px';
+	this.chart.invalidateSize();
+	
+	resizeGrid(this,width,height);
+]]></Implementation>
+</Method>
+</Class>
+</Export>

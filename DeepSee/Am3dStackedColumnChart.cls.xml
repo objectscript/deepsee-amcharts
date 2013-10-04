@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="DeepSee.Am3dStackedColumnChart">
+<Super>AbstractAmChart</Super>
+<TimeCreated>63097,67729.443479</TimeCreated>
+
+<Method name="%OnGetPortletName">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[    quit "AmCharts: 3d Stacked Column Chart"
+]]></Implementation>
+</Method>
+
+<Method name="%OnGetPortletIcon">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[    quit "deepsee/ds_chart_line.png"
+]]></Implementation>
+</Method>
+
+<Method name="acquireData">
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	// clear old data
+	
+		// connect to controller
+	var controller = this.getConnectedController();
+	if (!controller) return;
+	
+	// are we connected to a pivot table?
+	var isPivot = controller.getSelectedRange;
+	if (!isPivot)
+	{
+		var labelDim = 2;
+		var seriesSize = controller.getDimSize(1);
+		var seriesCount = controller.getDimSize(2);
+	}
+	else
+	{
+		var labelDim = 1;
+		var seriesSize = controller.getDimSize(2);
+		var seriesCount = controller.getDimSize(1);
+	}
+
+	// populate props array
+	var props = [];
+	props.names=new Array;
+	for(var yearVal=0;yearVal <  seriesSize;yearVal++)
+	{
+		var propName = controller.getPropertyName(yearVal);
+		if (!isPivot && propName.charAt(0) == '%') continue;  // KPI special columns
+		props[yearVal] = {category:propName, index:yearVal,names:[]};
+	for (var p = 0; p <seriesCount; p++)
+		{
+		var tempStr=controller.getLabel(p,labelDim)
+		props[yearVal][p]=controller.getData(p,yearVal);
+		props.names[p]=tempStr;
+		props[0].sC=seriesCount;
+		}
+	}
+	console.log(props);
+return props;
+]]></Implementation>
+</Method>
+
+<Method name="renderContents">
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	var chartData=this.acquireData();
+	
+	renderListingButton(this);
+	var chart = new AmCharts.AmSerialChart();
+    chart.dataProvider = chartData;
+    chart.categoryField = "category";
+    chart.fontSize = 14;
+    chart.startDuration = 1;
+    chart.plotAreaFillAlphas = 0.2;
+    // the following two lines makes chart 3D
+    chart.angle = 30;
+    chart.depth3D = 40;
+
+    // AXES
+    // category
+    var categoryAxis = chart.categoryAxis;
+    categoryAxis.gridAlpha = 0.2;
+    categoryAxis.gridPosition = "start";
+    categoryAxis.axisColor = "#DADADA";
+    categoryAxis.axisAlpha = 1;
+    categoryAxis.dashLength = 5;
+
+    // value
+    var valueAxis = new AmCharts.ValueAxis();
+    valueAxis.stackType = "3d"; // This line makes chart 3D stacked (columns are placed one behind another)
+    valueAxis.gridAlpha = 0.2;
+    valueAxis.axisColor = "#DADADA";
+    valueAxis.axisAlpha = 1;
+    valueAxis.dashLength = 5;
+   // valueAxis.unit = "";
+    chart.addValueAxis(valueAxis);
+
+
+	var graphs=new Array;
+	console.log(chartData);
+    for(var i=0;i<chartData[0].sC;i++)
+	{
+    graphs[i] = new AmCharts.AmGraph();
+   // graphs[i].valueAxis = valueAxis[i]; // we have to indicate which value axis should be used
+    graphs[i].title =chartData.names[i];//chartData.names[i].toString();//"red line";
+    graphs[i].lineAlpha = 0;
+    graphs[i].balloonText = this.hintText?this.hintText: chartData.names[i]+ ":<br>[[value]]"; 
+    graphs[i].fillColors = AmCharts.randomColor();
+    graphs[i].valueField = i;
+    graphs[i].fillAlphas = 0.6;
+    //graphs[i].alphaField= "fill";
+    graphs[i].type="column";
+    //graphs[i].fillAlphas = 0.9;
+    chart.addGraph(graphs[i]);
+	}
+	
+	var legend = new AmCharts.AmLegend();
+   // legend.align = "center";
+    legend.markerType = "circle";
+    chart.addLegend(legend);
+    
+    chart.write("amchart"+this.index);
+    this.chart=chart;
+     
+     //This part is for ONclick
+    var temppivot = this.getConnectedController(); //need this @clickGraphItem event
+        chart.addListener("clickGraphItem", 
+    	function (event) {
+	   		
+	   		for(var i=0;i<event.chart.graphs.length;i++)
+	   		{
+		   		event.chart.graphs[i].lineAlpha=0;
+	   		}
+	   		event.graph.lineAlpha = 1;
+        	event.chart.validateNow();
+    	   	temppivot.selectCellRange(event.graph.columnIndex+1,event.graph.columnIndex+1,event.graph.columnIndex+1,event.graph.columnIndex+1);
+    	   	return false;
+  });
+]]></Implementation>
+</Method>
+</Class>
+</Export>

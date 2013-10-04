@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+<Class name="DeepSee.AmLineMulAxesChart">
+<Super>AbstractAmChart</Super>
+<TimeCreated>63028,59101.652203</TimeCreated>
+
+<Method name="%OnGetPortletName">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[    quit "AmCharts: Multi-Axes Line Chart"
+]]></Implementation>
+</Method>
+
+<Method name="%OnGetPortletIcon">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[    quit "deepsee/table_48.gif"
+]]></Implementation>
+</Method>
+
+<Method name="acquireData">
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	// clear old data
+	
+		// connect to controller
+	var controller = this.getConnectedController();
+	if (!controller) return;
+	
+	// are we connected to a pivot table?
+	var isPivot = controller.getSelectedRange;
+	if (!isPivot)
+	{
+		var labelDim = 2;
+		var seriesSize = controller.getDimSize(1);
+		var seriesCount = controller.getDimSize(2);
+	}
+	else
+	{
+		var labelDim = 1;
+		var seriesSize = controller.getDimSize(2);
+		var seriesCount = controller.getDimSize(1);
+	}
+
+	// populate props array
+	var props = [];
+	props.names=new Array;
+	for(var yearVal=0;yearVal <  seriesSize;yearVal++)
+	{
+		var propName = controller.getPropertyName(yearVal);
+		if (!isPivot && propName.charAt(0) == '%') continue;  // KPI special columns
+		props[yearVal] = {year:propName, index:yearVal};
+	for (var p = 0; p <seriesCount; p++)
+	{
+		var tempStr=controller.getLabel(p,labelDim)
+		props[yearVal][p]=controller.getData(p,yearVal);
+		props.names[p]=tempStr;
+		props[0].sC=seriesCount;
+}
+	}
+
+return props;
+]]></Implementation>
+</Method>
+
+<Method name="renderContents">
+<Description>
+Client-side method to render control.</Description>
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+	renderListingButton(this);
+	//Using ONLY rows
+       var chart;
+
+   var chartData=this.acquireData();
+    //alert(chartData);
+    
+    
+ function zoomChart() {
+    // different zoom methods can be used - zoomToIndexes, zoomToDates, zoomToCategoryValues
+    chart.zoomToCategoryValues(0, 100);
+}
+
+
+   
+    // SERIAL CHART    
+    chart = new AmCharts.AmSerialChart();
+    chart.marginTop = 0;
+    chart.autoMarginOffset = 5;
+    chart.pathToImages = "http://www.amcharts.com/lib/images/";
+    chart.zoomOutButton = {
+        backgroundColor: '#000000',
+        backgroundAlpha: 0.15
+    };
+    chart.dataProvider = chartData;
+    chart.categoryField = "year";
+
+    // listen for "dataUpdated" event (fired when chart is inited) and call zoomChart method when it happens
+    chart.addListener("dataUpdated", zoomChart);
+
+    // AXES
+    // category                
+    var categoryAxis = chart.categoryAxis;
+    categoryAxis.parseDates = false; // as our data is date-based, we set parseDates to true
+    // our data is daily, so we set minPeriod to DD
+    minPeriod=10;
+    categoryAxis.dashLength = 2;
+    categoryAxis.gridAlpha = 0.15;
+    categoryAxis.axisColor = "#DADADA";
+    var valueAxis=new Array;
+    var curOffsetLeft=0,curOffsetRight=0
+	for(var i=0;i<chartData[0].sC;i++)
+	{
+    // first value axis (on the left)
+    valueAxis[i] = new AmCharts.ValueAxis();
+    valueAxis[i].position = (Math.floor((Math.random()*10))>5)?"right":"left"
+    valueAxis[i].offset = (valueAxis[i].position=="left")?curOffsetLeft++*20:curOffsetRight++*20;
+    if (this.barColors="") this.barColors="#cc9966"
+    valueAxis[i].axisColor = this.barColors.split(",")[i]?this.barColors.split(",")[i]:AmCharts.randomColor();//"#"+Math.floor(((Math.random()*100)%10))+"D"+Math.floor(((Math.random()*100)%10))+"981";
+    valueAxis[i].axisThickness = 2;
+    valueAxis[i].gridAlpha = 0;
+    chart.addValueAxis(valueAxis[i]);
+	}
+	var graphs=new Array;
+    for(var i=0;i<chartData[0].sC;i++)
+	{
+    graphs[i] = new AmCharts.AmGraph();
+    graphs[i].valueAxis = valueAxis[i]; // we have to indicate which value axis should be used
+    graphs[i].title = chartData.names[i]//"red line";
+    graphs[i].lineColor=valueAxis[i].axisColor;
+    graphs[i].valueField = i;
+    graphs[i].fillAlphas = 0.5;
+    graphs[i].bullet = "round";
+    graphs[i].hideBulletsCount = 30;
+    chart.addGraph(graphs[i]);
+	}
+  
+    // CURSOR
+    var chartCursor = new AmCharts.ChartCursor();
+    chartCursor.cursorPosition = "mouse";
+    chart.addChartCursor(chartCursor);
+
+    // SCROLLBAR
+    var chartScrollbar = new AmCharts.ChartScrollbar();
+    chart.addChartScrollbar(chartScrollbar);
+
+    // LEGEND
+    var legend = new AmCharts.AmLegend();
+    legend.marginLeft = 110;
+    //This part is for ONclick
+   window.temppivot = this.getConnectedController(); //need this @clickGraphItem event
+       
+    chart.addLegend(legend);
+ 
+    // WRITE
+    chart.write("amchart"+this.index);
+	this.chart=chart;
+ 	chart.addListener("zoomed", 
+    	function (event) {
+	    	console.log(event);
+	    	
+	    	//event.item.dataContext.fill = 1;
+        	//event.chart.validateData();
+    	   	temppivot.selectCellRange(event.startIndex+1,event.startIndex+1,event.endIndex+1,event.endIndex+1);
+  });
+]]></Implementation>
+</Method>
+</Class>
+</Export>
