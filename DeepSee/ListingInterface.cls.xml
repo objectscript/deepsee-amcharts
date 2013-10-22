@@ -99,7 +99,12 @@
 		, gridview: this.gridview
 		, colNames: colNames
 		, colModel: colModel
-		, rowNum:20
+		, rowNum:20,
+		, gridComplete: function(){
+			 jQuery(".ui-jqgrid a").on("click",function(i){
+		    var win=window.open(i.currentTarget.href, '_blank');
+  			win.focus();});
+  			}
 		, rowList:[10,20,30]
 		
 	});
@@ -114,8 +119,7 @@
 	    jQuery('#listingButton'+input)[0].src="deepsee/ds2_dialpad_44.png";
 	    jQuery("#listingButton"+input).attr("myparam","Listing");
 	    zenPage.onAdjustSizes();
-	    jQuery(".ui-jqgrid a").on("click",function(i){var win=window.open(i.currentTarget.href, '_blank');
-  win.focus();});
+	   
 	
 	    }
 	    return;
