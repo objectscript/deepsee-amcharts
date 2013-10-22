@@ -114,6 +114,8 @@
 	    jQuery('#listingButton'+input)[0].src="deepsee/ds2_dialpad_44.png";
 	    jQuery("#listingButton"+input).attr("myparam","Listing");
 	    zenPage.onAdjustSizes();
+	    jQuery(".ui-jqgrid a").on("click",function(i){window.location.href=i.currentTarget.href});
+	
 	    }
 	    return;
     }
