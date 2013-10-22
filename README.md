@@ -9,4 +9,4 @@ Installation:<br>
 • You can customize your portlet via settings.<br>
 
 Demo:<br>
-http://37.139.4.54:57773/csp/amcharts/_DeepSee.UserPortal.DashboardViewer.zen?DASHBOARD=AmCharts/Demo1.dashboard
+http://37.139.4.54:57773/amcharts/
