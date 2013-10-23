@@ -11,7 +11,7 @@
   
 	 &html<
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
-   <script type="text/javascript">
+    <script type="text/javascript">
    
 	//Need to storage Handler in WINDOW - bad((    
     var lbClickHandler=function(input,cont) {
@@ -70,7 +70,7 @@
             
         };
         csv = encodeURIComponent(csv);
-       
+        
 		
 		var link = document.createElement("a");
 		$(link).hide();
@@ -79,27 +79,24 @@
 		link.click();
     	}
    		}
-   		
-   		
-   		
 	    //console.log(#server(DeepSee.AmColumnSimpleChart.GetListingSql(curQuery,selR.toString()))#);
 	    var colModel=[];
 	    var colNames=[];
 		for (var key in gridData[0]) colModel.push({"name":key,"index":key});
 	    for (var key in gridData[0]) colNames.push(key);
 	    
-	   
 	    jQuery("#grid"+input).GridUnload();
 		jQuery("#grid"+input).jqGrid({
 		datatype: 'local',
 		pager: '#pager'+input
 		, data:gridData
+		, beforeSelectRow: function(){ return false; }
 		, rownumbers: this.rownumbers // A new column at left of the grid is added. The purpose of this column is to count the number of available rows, beginning from 1.
 		, viewrecords: this.viewrecords // jqGrid displays the beginning and ending record number in the grid
 		, gridview: this.gridview
 		, colNames: colNames
 		, colModel: colModel
-		, rowNum:20,
+		, rowNum:20
 		, gridComplete: function(){
 			 jQuery(".ui-jqgrid a").on("click",function(i){
 		    var win=window.open(i.currentTarget.href, '_blank');
@@ -120,7 +117,6 @@
 	    jQuery("#listingButton"+input).attr("myparam","Listing");
 	    zenPage.onAdjustSizes();
 	   
-	
 	    }
 	    return;
     }
