@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="Cache" version="25">
 <Class name="DeepSee.AbstractAmChart">
-<Super>%DeepSee.Component.Portlet.abstractPortlet,%ZEN.Component.page,DeepSee.ListingInterface</Super>
+<Super>%ZEN.Component.component,%ZEN.Component.page,DeepSee.ListingInterface,%ZEN.Component.dataView</Super>
 <TimeCreated>63098,52064.593511</TimeCreated>
 
 <Parameter name="INCLUDEFILES">
 <Default>style:http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css,style:http://www.trirand.net/themes/ui.jqgrid.css,script:http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js,script:http://code.jquery.com/ui/1.10.3/jquery-ui.js,script:http://www.trirand.net/js/trirand/i18n/grid.locale-ru.js,script:http://www.trirand.net/js/trirand/jquery.jqGrid.min.js,script:themeswitchertool.js</Default>
 </Parameter>
 
-<Parameter name="visible">
-<Default>0</Default>
-</Parameter>
+<Property name="settings">
+<Type>%String</Type>
+<MultiDimensional>1</MultiDimensional>
+</Property>
 
 <Property name="barColor">
 <Type>%String</Type>
@@ -35,6 +36,20 @@
 <Property name="captionsFromSource">
 <Type>%Boolean</Type>
 </Property>
+
+<Method name="%OnGetPortletName">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[    quit ""
+]]></Implementation>
+</Method>
+
+<Method name="%OnGetPortletIcon">
+<ClassMethod>1</ClassMethod>
+<ReturnType>%String</ReturnType>
+<Implementation><![CDATA[    quit ""
+]]></Implementation>
+</Method>
 
 <Method name="%OnGetPortletSettings">
 <ClassMethod>1</ClassMethod>
@@ -142,9 +157,9 @@ Subclass can implement this, if they wish.</Description>
 	var obj=document.getElementById('amchart'+this.index);
 	obj.style.width=width+'px';
 	obj.style.height=height+'px';
-	this.chart.invalidateSize();
+	if(this.chart) { this.chart.invalidateSize();
 	
-	resizeGrid(this,width,height);
+	resizeGrid(this,width,height); }
 ]]></Implementation>
 </Method>
 </Class>

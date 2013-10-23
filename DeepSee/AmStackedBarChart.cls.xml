@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="Cache" version="25">
 <Class name="DeepSee.AmStackedBarChart">
-<Super>AbstractAmChart</Super>
+<Super>AbstractAmChart,%DeepSee.Component.Portlet.abstractPortlet</Super>
 <TimeCreated>63026,69808.341377</TimeCreated>
 
 <Method name="%OnGetPortletName">

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="Cache" version="25">
 <Class name="DeepSee.AmSmoothedLineChart">
-<Super>AbstractAmChart</Super>
+<Super>AbstractAmChart,%DeepSee.Component.Portlet.abstractPortlet</Super>
 <TimeCreated>63096,46319.007451</TimeCreated>
 
 <Method name="%OnGetPortletName">

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="Cache" version="25">
 <Class name="DeepSee.AmPyramidChart">
-<Super>AbstractAmChart</Super>
+<Super>AbstractAmChart,%DeepSee.Component.Portlet.abstractPortlet</Super>
 <TimeCreated>63098,51979.78554</TimeCreated>
 
 <Method name="%OnGetPortletName">
