@@ -19,10 +19,14 @@
 </UDLText>
 
 <Parameter name="INCLUDEFILES">
-<Default>redmond.css,ui.jqgrid.css,jquery.min.js,jquery-ui.min.js,grid.locale-ru.js,jquery.jqGrid.min.js,themeswitchertool.js</Default>
+<Default>style:http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css,style:http://www.trirand.net/themes/ui.jqgrid.css,script:http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js,script:http://code.jquery.com/ui/1.10.3/jquery-ui.js,script:http://www.trirand.net/js/trirand/i18n/grid.locale-ru.js,script:http://www.trirand.net/js/trirand/jquery.jqGrid.min.js,script:themeswitchertool.js</Default>
 </Parameter>
 
 <Property name="pager">
+<Type>%Boolean</Type>
+</Property>
+
+<Property name="excelExport">
 <Type>%Boolean</Type>
 </Property>
 
@@ -74,6 +78,8 @@
 	set pInfo($I(pInfo)) = $LB("gridview",1,"%Boolean",$$$Text("gridview","%DeepSee"),"")
 	set pInfo($I(pInfo)) = $LB("filterToolbar",0,"%Boolean",$$$Text("filterToolbar","%DeepSee"),"")
 	set pInfo($I(pInfo)) = $LB("rowLabels",1,"%Boolean",$$$Text("rowLabels","%DeepSee"),"")
+	
+	set pInfo($I(pInfo)) = $LB("excelExport",1,"%Boolean",$$$Text("Allow export to Excel","%DeepSee"),"")
 		
 	quit $$$OK
 ]]></Implementation>
@@ -98,8 +104,53 @@
 		set propName = $order(..settings(propName))
 	}
 
-	&html<<table id="grid" style="width:100%; height:100%"/>>
-	if ..pager &html<<div id="pager"/>>
+	&html<<table id="grid#(..index)#" style="width:100%; height:100%"></table>>
+	if ..pager &html<<div id="pager#(..index)#"/>>
+]]></Implementation>
+</Method>
+
+<Method name="saveAsExcel">
+<FormalSpec>self</FormalSpec>
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[
+		var gridData = jQuery(this).jqGrid('getRowData');
+	    if (typeof(gridData) !== "undefined")
+    	{
+        var arr =gridData;
+        
+        var csv = '';
+        var i = 0;
+        for (i=0;i<arr.length;i++) {
+
+            var row = arr[i];
+           
+            var csv_row = [];
+            for (var key in row){
+	           
+                var val = row[key].replace(";", ":");
+                //BAD thing, take from locale
+                var val = row[key].replace(".", ",");
+                //console.log(val);
+                csv_row.push(val);
+            }
+
+            csv += csv_row.join(";");
+
+            if (i<arr.length-1)
+                csv +='\r\n';
+
+            
+        };
+        csv = encodeURIComponent(csv);
+        
+		
+		var link = document.createElement("a");
+		jQuery(link).hide();
+		link.setAttribute("href", "data:application/csv;charset=utf-8,"+csv);
+		link.setAttribute("download", "my_data.csv");
+		link.click();
+    	}
 ]]></Implementation>
 </Method>
 
@@ -108,17 +159,64 @@
 Client-side method to render control.</Description>
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
-<Implementation><![CDATA[	// not using this method due to strange "Error in adjustTableLayout: enc is null" exception thrown from %DeepSee.Component.pivotTable code (in case of pivot datasource)
-]]></Implementation>
-</Method>
-
-<Method name="onloadHandler">
-<Description>
-This client event, if present, is fired when the page is loaded.</Description>
-<Language>javascript</Language>
-<ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
-	this.renderGrid();
+	jQuery("#grid"+this.index).jqGrid('clearGridData');
+		jQuery("#grid"+this.index).GridUnload(); // destroy the grid saving the table and pager
+	
+	// connect to controller
+	var controller = this.getConnectedController();
+	if (!controller) return;
+	
+	// are we connected to a pivot table?
+	var isPivot = controller.getSelectedRange;
+	
+	var dim = (isPivot ? 2 : 1);
+	var seriesSize = controller.getDimSize(dim);
+	var colNames = [];
+	var colModel = [];
+	
+	// add label column
+	if (this.rowLabels)
+	{
+		colNames[0] = "";
+		colModel[0] = {name:"__label", index:"__label"};
+	}
+	
+	// add columns
+	for (var p = 0; p < seriesSize; p++)
+	{
+		var propName = controller.getPropertyName(p);
+			
+		if (!isPivot && propName.charAt(0) == '%') continue;   // KPI special columns
+		
+		colNames[colNames.length] = controller.getLabel(p, dim);
+		colModel[colModel.length] = {name:propName, index:propName};
+	}
+		
+	
+	jQuery("#grid"+this.index).jqGrid({
+		datatype: 'local'
+		, pager: (this.pager ? '#pager'+this.index : '')
+		, rownumbers: this.rownumbers // A new column at left of the grid is added. The purpose of this column is to count the number of available rows, beginning from 1.
+		, viewrecords: this.viewrecords // jqGrid displays the beginning and ending record number in the grid
+		, gridview: this.gridview
+		, colNames: colNames
+		, colModel: colModel
+		});
+	
+
+		
+	if(this.filterToolbar || this.excelExport)
+	jQuery("#grid"+this.index).jqGrid('navGrid','#pager'+this.index,{edit:false,add:false,del:false,csv:true,position: 'left'});
+	
+		if(this.filterToolbar)
+		jQuery("#grid"+this.index).jqGrid('filterToolbar', {searchOnEnter:false});
+		
+		if (this.excelExport)
+		jQuery('#grid'+this.index).jqGrid('navButtonAdd','#pager'+this.index,{id:'pager_csv',caption:'',title:'Export To CSV',onClickButton : this.saveAsExcel, buttonicon:'ui-icon-document'}); 
+
+	    
+	
 	this.acquireData();
 ]]></Implementation>
 </Method>
@@ -130,13 +228,15 @@ Notification that the dataController associated with this dataView has raised an
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
+	console.log(reason);
 	switch(reason) 
 	{
 		case 'dataChange':
-			this.acquireData();
+			this.renderContents();
+			
 			break;
 		case 'modelChange':
-			this.renderGrid();
+			this.renderContents();
 			this.acquireData();
 			break;
 	}
@@ -167,7 +267,7 @@ Load data and populate the grid</Description>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
 	// clear old data
-	jQuery("#grid").jqGrid('clearGridData');
+	
 	
 	// connect to controller
 	var controller = this.getConnectedController();
@@ -193,6 +293,7 @@ Load data and populate the grid</Description>
 	for (var p = 0; p < seriesSize; p++)
 	{
 		var propName = controller.getPropertyName(p);
+		
 		if (!isPivot && propName.charAt(0) == '%') continue;  // KPI special columns
 		
 		props[props.length] = {name:propName, index:p};
@@ -205,86 +306,16 @@ Load data and populate the grid</Description>
 		var rowData = Object.create(null);
 		
 		if (this.rowLabels)
-			Object.defineProperty(rowData, "__label", {value: controller.getLabel(n, labelDim)});
+			rowData["__label"]=controller.getLabel(n, labelDim);
 		
 		for (var p = 0; p < props.length; p++)
-			Object.defineProperty(rowData, props[p].name, 
-					isPivot ? {value: controller.getData(n, props[p].index)} : {value: controller.getData(props[p].index, n)});
+			rowData[props[p].name]= 
+					isPivot ? controller.getData(n, props[p].index) : controller.getData(props[p].index, n);
 
 		rowData['idd']= n
 		rows[n] = rowData
 	}
-	jQuery("#grid").jqGrid('addRowData', 'idd', rows);
-]]></Implementation>
-</Method>
-
-<Method name="renderGrid">
-<Description>
-Create and configure jqGrid</Description>
-<Language>javascript</Language>
-<ClientMethod>1</ClientMethod>
-<Implementation><![CDATA[
-	jQuery("#grid").GridUnload(); // destroy the grid saving the table and pager
-	
-	// connect to controller
-	var controller = this.getConnectedController();
-	if (!controller) return;
-	
-	// are we connected to a pivot table?
-	var isPivot = controller.getSelectedRange;
-	
-	var dim = (isPivot ? 2 : 1);
-	var seriesSize = controller.getDimSize(dim);
-	var colNames = [];
-	var colModel = [];
-	
-	// add label column
-	if (this.rowLabels)
-	{
-		colNames[0] = "";
-		colModel[0] = {name:"__label", index:"__label"};
-	}
-	
-	// add columns
-	for (var p = 0; p < seriesSize; p++)
-	{
-		var propName = controller.getPropertyName(p);
-		if (!isPivot && propName.charAt(0) == '%') continue;   // KPI special columns
-		
-		colNames[colNames.length] = controller.getLabel(p, dim);
-		colModel[colModel.length] = {name:propName, index:propName};
-	}
-		
-	/*
-	var colNames = ['Inv No', 'Date', 'Client', 'Amount', 'Tax', 'Total', 'Notes'];
-	var colModel = [ 
-		{name:'id',index:'id', width:60, sorttype:"int"}
-		, {name:'invdate',index:'invdate', width:90, sorttype:"date"}
-		, {name:'name',index:'name', width:100}
-		, {name:'amount',index:'amount', width:80, align:"right",sorttype:"float"}
-		, {name:'tax',index:'tax', width:80, align:"right",sorttype:"float"}
-		, {name:'total',index:'total', width:80,align:"right",sorttype:"float"}
-		, {name:'note',index:'note', width:150, sortable:false} ];
-	*/
-	
-	jQuery("#grid").jqGrid({
-		datatype: 'local'
-		, pager: (this.pager ? '#pager' : '')
-		, rownumbers: this.rownumbers // A new column at left of the grid is added. The purpose of this column is to count the number of available rows, beginning from 1.
-		, viewrecords: this.viewrecords // jqGrid displays the beginning and ending record number in the grid
-		, gridview: this.gridview
-		, colNames: colNames
-		, colModel: colModel
-	});
-	
-	if (this.filterToolbar)
-		jQuery("#grid").jqGrid('filterToolbar', {searchOnEnter:false});
-	
-	//jQuery("#grid").jqGrid('navGrid', "#pager", {edit:false,add:false,del:false,view:false,search:false});
-	//var code = new Function('rowid', 'iRow', 'iCol', 'e', 'alert(rowid + "/" + iRow + "/" + iCol);');
-	//jQuery("#grid").jqGrid('setGridParam', {ondblClickRow: code});
-		
-	//this.getEnclosingDiv().onresize();
+	jQuery("#grid"+this.index).jqGrid('addRowData', 'idd', rows);
 ]]></Implementation>
 </Method>
 
@@ -296,8 +327,9 @@ Subclass can implement this, if they wish.</Description>
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
-jQuery("#grid").setGridWidth(width - 4);
-jQuery("#grid").setGridHeight(height - 1 - jQuery("#gbox_grid").height() + jQuery("#gbox_grid .ui-jqgrid-bdiv").height());
+	
+jQuery("#grid"+this.index).setGridWidth(width - 4);
+	jQuery("#grid"+this.index).setGridHeight(height - 1 - jQuery("#gbox_grid"+this.index).height() + jQuery("#gbox_grid"+this.index+" .ui-jqgrid-bdiv").height());
 ]]></Implementation>
 </Method>
 </Class>
