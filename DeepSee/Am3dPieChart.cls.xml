@@ -14,7 +14,7 @@
 <Method name="%OnGetPortletIcon">
 <ClassMethod>1</ClassMethod>
 <ReturnType>%String</ReturnType>
-<Implementation><![CDATA[    quit "deepsee/table_48.gif"
+<Implementation><![CDATA[    quit "deepsee/ds_chart_pie3d.png"
 ]]></Implementation>
 </Method>
 
@@ -32,7 +32,7 @@ This method gets data from controller and converts it to the right structure</De
 	
 	// are we connected to a pivot table?
 	var isPivot = controller.getSelectedRange;
-	if (!isPivot)
+	if (isPivot)
 	{
 		var labelDim = 2;
 		var seriesSize = controller.getDimSize(1);
@@ -45,17 +45,22 @@ This method gets data from controller and converts it to the right structure</De
 		var seriesCount = controller.getDimSize(1);
 	}
 
-	// populate props array
+	// populate props array 
 	var props = [];
-	for(var yearVal=0;yearVal <  seriesCount;yearVal++)
+	var propName; //THIS IS NAME OF COLUMN WHICH IS GONNA BE USED
+	for(var i=0;i <  seriesCount;i++)
 	{
-		//var propName = controller.getPropertyName(yearVal);
-		var propName = controller.getLabel(yearVal,labelDim);
+		window.cont=controller;
+		propName = isPivot ? controller.getLabel(i,labelDim) :  controller.getLabel(i,labelDim);
 		if (!isPivot && propName.charAt(0) == '%') continue;  // KPI special columns
-		props[yearVal] = {name:propName, index:yearVal}
-		props[yearVal].val=controller.getData(yearVal,0);
+		break; //Found acceptable name of column
 	}
-
+	for(var i=0;i < seriesSize;i++)
+	{
+		props[i] = isPivot?{name:controller.getLabel(i,1),index:i}: {name:controller.dataBag.getSeriesLabel(i), index:i}
+		props[i].val=isPivot?controller.getDataByName(propName,i):controller.dataBag.getValue(propName,i);
+	}
+	console.log(props);
 return props;
 ]]></Implementation>
 </Method>
@@ -66,9 +71,9 @@ Client-side method to render control.</Description>
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
-	renderListingButton(this);
-       
-       
+	 
+	//renderListingButton(this,"amchart");
+    this.renderSameParts(this);   
     var chart;
     var chartData=this.acquireData();
    
@@ -93,12 +98,14 @@ Client-side method to render control.</Description>
     this.chart = chart;
     
      //This part is for ONclick
-    var temppivot = this.getConnectedController(); //need this @clickGraphItem event
+   var selfPivot = this.getConnectedController();
+    console.log(selfPivot);
+    if(selfPivot.getSelectedRange)
         chart.addListener("clickSlice", 
     	function (event) {
 	    	console.log(event);	    
 	    	
-    	   	temppivot.selectCellRange(event.dataItem.index+1,0,event.dataItem.index+1,0);
+    	   	selfPivot.selectCellRange(event.dataItem.index+1,0,event.dataItem.index+1,0);
     	   	return false;
   });
 ]]></Implementation>

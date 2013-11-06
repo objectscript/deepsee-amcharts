@@ -5,7 +5,7 @@
 <TimeCreated>63098,52064.593511</TimeCreated>
 
 <Parameter name="INCLUDEFILES">
-<Default>style:http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css,style:http://www.trirand.net/themes/ui.jqgrid.css,script:http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js,script:http://code.jquery.com/ui/1.10.3/jquery-ui.js,script:http://www.trirand.net/js/trirand/i18n/grid.locale-ru.js,script:http://www.trirand.net/js/trirand/jquery.jqGrid.min.js,script:themeswitchertool.js</Default>
+<Default>style:http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css,style:http://www.trirand.net/themes/ui.jqgrid.css,script:http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js,script:http://code.jquery.com/ui/1.10.3/jquery-ui.js,script:http://www.trirand.net/js/trirand/jquery.jqGrid.min.js,script:themeswitchertool.js</Default>
 </Parameter>
 
 <Property name="settings">
@@ -58,10 +58,10 @@
 <Implementation><![CDATA[
  	kill pInfo
   // $LB(name,value,type,caption,title)
-  	set pInfo($I(pInfo)) = $LB("barColor","","%String",$$$Text("barColor","DeepSee"),"")
+  	set pInfo($I(pInfo)) = $LB("barColor","","%String",$$$Text("Bar color","DeepSee"),"")
  	set pInfo($I(pInfo)) = $LB("captionsFromSource",1,"%Boolean",$$$Text("Use captions from source","DeepSee"),"")
   	set pInfo($I(pInfo)) = $LB("captions","","%String",$$$Text("Captions","DeepSee"),"")
-	set pInfo($I(pInfo)) = $LB("pager",1,"%Boolean",$$$Text("pager","DeepSee"),"")
+	set pInfo($I(pInfo)) = $LB("pager",1,"%Boolean",$$$Text("Enable pager?","DeepSee"),"")
 	set pInfo($I(pInfo)) = $LB("enableListing",0,"%Boolean",$$$Text("Детализация","DeepSee"),"")
 	set pInfo($I(pInfo)) = $LB("hintText","","%String",$$$Text("Текст в подсказке","DeepSee"),"")
  	
@@ -105,6 +105,14 @@
 			this.renderContents();
 			break;
 	}
+]]></Implementation>
+</Method>
+
+<Method name="renderSameParts">
+<FormalSpec>self</FormalSpec>
+<Language>javascript</Language>
+<ClientMethod>1</ClientMethod>
+<Implementation><![CDATA[	renderListingButton(self,"amchart");
 ]]></Implementation>
 </Method>
 
@@ -157,9 +165,10 @@ Subclass can implement this, if they wish.</Description>
 	var obj=document.getElementById('amchart'+this.index);
 	obj.style.width=width+'px';
 	obj.style.height=height+'px';
-	if(this.chart) { this.chart.invalidateSize();
-	
-	resizeGrid(this,width,height); }
+	if(this.chart) { 
+	  this.chart.invalidateSize();
+	  resizeGrid(this,width,height);
+	  }
 ]]></Implementation>
 </Method>
 </Class>

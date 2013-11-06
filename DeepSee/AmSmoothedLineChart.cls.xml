@@ -63,8 +63,8 @@ return props;
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
 	
-	renderListingButton(this);
-	
+	//renderListingButton(this);
+	 this.renderSameParts(this);   
 	var chart = new AmCharts.AmSerialChart();
     var chartData=this.acquireData();
     chart.pathToImages = "http://www.amcharts.com/lib/3/images/";

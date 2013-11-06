@@ -29,7 +29,6 @@
 	// connect to controller
 	var controller = this.getConnectedController();
 	if (!controller) return;
-	
 	// are we connected to a pivot table?
 	var isPivot = controller.getSelectedRange;
 	if (!isPivot)
@@ -68,7 +67,7 @@ Client-side method to render control.</Description>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
 	
-	renderListingButton(this);
+	 this.renderSameParts(this);   
 
 	//AmCharts Chart Start Point
        var chart;

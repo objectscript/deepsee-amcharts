@@ -70,7 +70,9 @@ return props;
 <Implementation><![CDATA[
 	var chartData=this.acquireData();
 	
-	renderListingButton(this);
+	//renderListingButton(this);
+	 this.renderSameParts(this);   
+	
 	var chart = new AmCharts.AmSerialChart();
     chart.dataProvider = chartData;
     chart.categoryField = "category";

@@ -4,6 +4,9 @@
 <Super>%ZEN.Component.page</Super>
 <TimeCreated>63039,42156.639779</TimeCreated>
 
+<Parameter name="INCLUDEFILES">
+</Parameter>
+
 <Method name="DrawHTML">
 <ClassMethod>1</ClassMethod>
 <Implementation><![CDATA[
@@ -11,37 +14,46 @@
   
 	 &html<
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+    <script type="text/javascript" src="http://www.trirand.net/js/trirand/jquery.jqGrid.min.js"></script>
+	<script src="http://www.trirand.net/js/trirand/i18n/grid.locale-ru.js"></script>
+    
+    
     <script type="text/javascript">
-   
-	//Need to storage Handler in WINDOW - bad((    
-    var lbClickHandler=function(input,cont) {
-		if((!cont)||(!input)) return;
+     
+	//OnClick handler for listing button   
+    var lbClickHandler=function(self,target) { 
+    	var cont = self.getConnectedController();
+    	var myindex = self.index;
+		if((!cont)||(!myindex)) return;
 	    var selR=cont.getSelectedRange();
 	    if (!selR) {
 	    	alert("Требуется выбрать ячейчку для показа детализации");
 	    	return;
 	    }
-	    var isListing = !(jQuery("#listingButton"+input).attr("myparam")=="Graph");
+	    var isListing = !(jQuery("#listingButton"+myindex).attr("myparam")=="Graph");
 	    if (isListing) 
 	    {
-		    jQuery("#listingButton"+input)[0].src="deepsee/ds2_binoculars_44.png";
-		    jQuery("#listingButton"+input).attr("myparam","Graph");
-		    jQuery('#wrapper'+input).hide();
-	    	jQuery('#grid'+input).hide(1000);
+		    jQuery("#listingButton"+myindex)[0].src="deepsee/ds2_binoculars_44.png";
+		    jQuery("#listingButton"+myindex).attr("myparam","Graph");
+		    jQuery('#wrapper'+myindex).hide();
+	    	jQuery('#grid'+myindex).hide(1000);
 	    	
-		    jQuery('#amchart'+input).show();
+		    jQuery("#"+target+myindex).show();
 		    cont.fireOnUpdateEvent();
+		    zenPage.onAdjustSizes();
 		    
 	    }
 	    else{
-		   
-		    jQuery('#amchart'+input).hide(1000);
+		    jQuery("#"+target+myindex).hide(1000);
 	    var curQuery=cont.GetCurrentQueryText();
 	    var gridData=JSON.parse(#server(DeepSee.ListingInterface.GetListingSql(curQuery,selR.toString()))#);
-	    
-	    
-
-   		var saveAsExcel = function(){
+	    //var gridData=JSON.parse(zenClassMethod(self,'GetListingSql','L,L','String',[curQuery,selR.toString]));//(,"0,"+seriesCount+",0,"+seriesCount));
+	
+		/* 
+		Saving in excel CSV format
+		*/
+		
+		var saveAsExcel = function(){
 	    if (typeof(gridData) !== "undefined")
     	{
         var arr =gridData;
@@ -79,16 +91,23 @@
 		link.click();
     	}
    		}
-	    //console.log(#server(DeepSee.AmColumnSimpleChart.GetListingSql(curQuery,selR.toString()))#);
+	   /*
+	   End : CSV EXPORT
+	   */
+	   
+	   
+	   
 	    var colModel=[];
 	    var colNames=[];
 		for (var key in gridData[0]) colModel.push({"name":key,"index":key});
 	    for (var key in gridData[0]) colNames.push(key);
-	    
-	    jQuery("#grid"+input).GridUnload();
-		jQuery("#grid"+input).jqGrid({
-		datatype: 'local',
-		pager: '#pager'+input
+	   
+	   
+	    $("#grid"+myindex).GridUnload();
+	   
+		$("#grid"+myindex).jqGrid({
+		datatype: 'local'
+		, pager:'#pager'+myindex
 		, data:gridData
 		, beforeSelectRow: function(){ return false; }
 		, rownumbers: this.rownumbers // A new column at left of the grid is added. The purpose of this column is to count the number of available rows, beginning from 1.
@@ -96,7 +115,7 @@
 		, gridview: this.gridview
 		, colNames: colNames
 		, colModel: colModel
-		, rowNum:20
+		//, rowNum: 20
 		, gridComplete: function(){
 			 jQuery(".ui-jqgrid a").on("click",function(i){
 		    var win=window.open(i.currentTarget.href, '_blank');
@@ -104,25 +123,27 @@
   			}
 		, rowList:[10,20,30]
 		
-	});
-		jQuery("#grid"+input).jqGrid('navGrid','#pager'+input,{edit:false,add:false,del:false,csv:true,position: 'left'});
-		
-		jQuery("#grid"+input).jqGrid('filterToolbar', {searchOnEnter:false});
-		jQuery('#grid'+input).jqGrid('navButtonAdd','#pager'+input,{id:'pager_csv',caption:'',title:'Export To CSV',onClickButton : saveAsExcel ,buttonicon:'ui-icon-document'}); 
+	});  
+	
+		jQuery("#grid"+myindex).jqGrid('navGrid','#pager'+myindex,{edit:false,add:false,del:false,csv:true,position: 'left'});
+		jQuery("#grid"+myindex).jqGrid('filterToolbar', {searchOnEnter:false});
+		jQuery('#grid'+myindex).jqGrid('navButtonAdd','#pager'+myindex,{id:'pager_csv1',caption:'',title:'Export To CSV',onClickButton : saveAsExcel ,buttonicon:'ui-icon-document'}); 
 
 	    
-	    jQuery('#wrapper'+input).show();
-	    jQuery('#grid'+input).show(1000);
-	    jQuery('#listingButton'+input)[0].src="deepsee/ds2_dialpad_44.png";
-	    jQuery("#listingButton"+input).attr("myparam","Listing");
+	    jQuery('#wrapper'+myindex).show();
+	    jQuery('#grid'+myindex).show(1000);
+	    jQuery('#listingButton'+myindex)[0].src="deepsee/ds2_dialpad_44.png";
+	    jQuery("#listingButton"+myindex).attr("myparam","Listing");
 	    zenPage.onAdjustSizes();
 	   
 	    }
 	    return;
     }
     
-    var renderListingButton =function(self) 
+    var renderListingButton =function(self, target) 
 	{
+		var isPivot = self.getConnectedController().getSelectedRange;
+		
 	//Delete previous buttons
 	jQuery("#listingButton"+self.index+", #listingTD"+self.index).remove();
 
@@ -132,16 +153,20 @@
   	
   	//Initiallize onClick function for listing button
   	var selfIndex=self.index;
+  	
   	var contr=self.getConnectedController();
    	jQuery("#listingButton"+self.index).click(function(){
-	   lbClickHandler(selfIndex,contr);
-	   });
+	   lbClickHandler(self,target);
+	   }); 
+	if (!isPivot) jQuery("#listingButton"+self.index).css('opacity', 0.5).off("click");
 	}
 	var resizeGrid = function(self,width, height){
 		jQuery("#grid"+self.index).setGridWidth(width - 4);
 	jQuery("#grid"+self.index).setGridHeight(height - 1 - jQuery("#gbox_grid"+self.index).height() + jQuery("#gbox_grid"+self.index+" .ui-jqgrid-bdiv").height());
 	}
+
     </script>
+  
     >
 ]]></Implementation>
 </Method>
@@ -149,6 +174,7 @@
 <Method name="GetListingSql">
 <ClassMethod>1</ClassMethod>
 <FormalSpec>inMDX,inrange</FormalSpec>
+<ZenMethod>1</ZenMethod>
 <Implementation><![CDATA[
 	try {
 	// Run the query that was last run in this KPI (this populated the table we are selecting from)

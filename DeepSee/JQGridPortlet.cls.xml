@@ -1,28 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="Cache" version="25">
 <Class name="DeepSee.JQGridPortlet">
-<Super>%DeepSee.Component.Portlet.abstractPortlet</Super>
+<Super>%DeepSee.Component.Portlet.abstractPortlet,%ZEN.Component.page,DeepSee.ListingInterface</Super>
 <TimeCreated>62734,57803.667351</TimeCreated>
-
-<UDLText name="T">
-<Content><![CDATA[
-// Parameter INCLUDEFILES = "style:http://jqueryui.com/themeroller/css/parseTheme.css.php?theme=redmond,style:http://www.trirand.net/themes/ui.jqgrid.css,script:http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js,script:http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.23/jquery-ui.min.js,script:http://www.trirand.net/js/trirand/i18n/grid.locale-ru.js,script:http://www.trirand.net/js/trirand/jquery.jqGrid.min.js,script:http://jqueryui.com/themeroller/themeswitchertool/";
-
-]]></Content>
-</UDLText>
-
-<UDLText name="T">
-<Content><![CDATA[
-// order matters
-
-]]></Content>
-</UDLText>
 
 <Parameter name="INCLUDEFILES">
 <Default>style:http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css,style:http://www.trirand.net/themes/ui.jqgrid.css,script:http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js,script:http://code.jquery.com/ui/1.10.3/jquery-ui.js,script:http://www.trirand.net/js/trirand/i18n/grid.locale-ru.js,script:http://www.trirand.net/js/trirand/jquery.jqGrid.min.js,script:themeswitchertool.js</Default>
 </Parameter>
 
 <Property name="pager">
+<Type>%Boolean</Type>
+</Property>
+
+<Property name="enableListing">
 <Type>%Boolean</Type>
 </Property>
 
@@ -50,17 +40,21 @@
 <Type>%Boolean</Type>
 </Property>
 
+<Property name="target">
+<Type>%String</Type>
+</Property>
+
 <Method name="%OnGetPortletName">
 <ClassMethod>1</ClassMethod>
 <ReturnType>%String</ReturnType>
-<Implementation><![CDATA[	quit "jqGrid"
+<Implementation><![CDATA[	quit "jQuery Grid"
 ]]></Implementation>
 </Method>
 
 <Method name="%OnGetPortletIcon">
 <ClassMethod>1</ClassMethod>
 <ReturnType>%String</ReturnType>
-<Implementation><![CDATA[	quit "deepsee/table_48.gif"
+<Implementation><![CDATA[	quit "deepsee/ds2_list_44.png"
 ]]></Implementation>
 </Method>
 
@@ -72,14 +66,15 @@
 	kill pInfo
 	// $LB(name,value,type,caption,title)
 
-	set pInfo($I(pInfo)) = $LB("pager",1,"%Boolean",$$$Text("pager","%DeepSee"),"")
-	set pInfo($I(pInfo)) = $LB("rownumbers",1,"%Boolean",$$$Text("rownumbers","%DeepSee"),"")
+	set pInfo($I(pInfo)) = $LB("pager",1,"%Boolean",$$$Text("Enable pager?","%DeepSee"),"")
+	set pInfo($I(pInfo)) = $LB("rownumbers",1,"%Boolean",$$$Text("Rows numbering","%DeepSee"),"")
 	set pInfo($I(pInfo)) = $LB("viewrecords",1,"%Boolean",$$$Text("viewrecords","%DeepSee"),"")
 	set pInfo($I(pInfo)) = $LB("gridview",1,"%Boolean",$$$Text("gridview","%DeepSee"),"")
-	set pInfo($I(pInfo)) = $LB("filterToolbar",0,"%Boolean",$$$Text("filterToolbar","%DeepSee"),"")
-	set pInfo($I(pInfo)) = $LB("rowLabels",1,"%Boolean",$$$Text("rowLabels","%DeepSee"),"")
+	set pInfo($I(pInfo)) = $LB("filterToolbar",0,"%Boolean",$$$Text("Enable filter toolbar?","%DeepSee"),"")
+	set pInfo($I(pInfo)) = $LB("rowLabels",1,"%Boolean",$$$Text("Enable row labels?","%DeepSee"),"")
+	set pInfo($I(pInfo)) = $LB("enableListing",1,"%Boolean",$$$Text("Enable listing detalization?","%DeepSee"),"")
 	
-	set pInfo($I(pInfo)) = $LB("excelExport",1,"%Boolean",$$$Text("Allow export to Excel","%DeepSee"),"")
+	set pInfo($I(pInfo)) = $LB("excelExport",1,"%Boolean",$$$Text("Allow export to Excel?","%DeepSee"),"")
 		
 	quit $$$OK
 ]]></Implementation>
@@ -104,8 +99,14 @@
 		set propName = $order(..settings(propName))
 	}
 
-	&html<<table id="grid#(..index)#" style="width:100%; height:100%"></table>>
-	if ..pager &html<<div id="pager#(..index)#"/>>
+	&html<
+	<div id="portletMain#(..index)#" style="width:100%;height:100%"><table id="jqgrid#(..index)#" style="width:100%; height:100%"></table>>
+	if ..pager &html<<div id="jqpager#(..index)#"/></div></div>
+	<div id="wrapper#(..index)#" style="display:none;"><table id="grid#(..index)#" style="width:100%; height:100%;"></table>
+	<div id="pager#(..index)#"></div>
+	</div>
+	>
+	d ##class(DeepSee.ListingInterface).DrawHTML()
 ]]></Implementation>
 </Method>
 
@@ -160,13 +161,18 @@ Client-side method to render control.</Description>
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
-	jQuery("#grid"+this.index).jqGrid('clearGridData');
-		jQuery("#grid"+this.index).GridUnload(); // destroy the grid saving the table and pager
+	renderListingButton(this, "portletMain");
+	
+	jQuery("#jqgrid"+this.index).jqGrid('clearGridData');
+		jQuery("#jqgrid"+this.index).GridUnload(); // destroy the grid saving the table and pager
 	
 	// connect to controller
 	var controller = this.getConnectedController();
+	
 	if (!controller) return;
 	
+	   
+
 	// are we connected to a pivot table?
 	var isPivot = controller.getSelectedRange;
 	
@@ -194,26 +200,27 @@ Client-side method to render control.</Description>
 	}
 		
 	
-	jQuery("#grid"+this.index).jqGrid({
+	jQuery("#jqgrid"+this.index).jqGrid({
 		datatype: 'local'
-		, pager: (this.pager ? '#pager'+this.index : '')
+		, pager: (this.pager ? '#jqpager'+this.index : '')
 		, rownumbers: this.rownumbers // A new column at left of the grid is added. The purpose of this column is to count the number of available rows, beginning from 1.
 		, viewrecords: this.viewrecords // jqGrid displays the beginning and ending record number in the grid
 		, gridview: this.gridview
 		, colNames: colNames
 		, colModel: colModel
+		, onSelectRow : function(e){ controller.selectCellRange(+e+1,1,+e+1,colNames.length); }
 		});
 	
 
 		
 	if(this.filterToolbar || this.excelExport)
-	jQuery("#grid"+this.index).jqGrid('navGrid','#pager'+this.index,{edit:false,add:false,del:false,csv:true,position: 'left'});
+	jQuery("#jqgrid"+this.index).jqGrid('navGrid','#jqpager'+this.index,{edit:false,add:false,del:false,csv:true,position: 'left'});
 	
 		if(this.filterToolbar)
-		jQuery("#grid"+this.index).jqGrid('filterToolbar', {searchOnEnter:false});
+		jQuery("#jqgrid"+this.index).jqGrid('filterToolbar', {searchOnEnter:false});
 		
 		if (this.excelExport)
-		jQuery('#grid'+this.index).jqGrid('navButtonAdd','#pager'+this.index,{id:'pager_csv',caption:'',title:'Export To CSV',onClickButton : this.saveAsExcel, buttonicon:'ui-icon-document'}); 
+		jQuery("#jqgrid"+this.index).jqGrid('navButtonAdd','#jqpager'+this.index,{id:'pager_csv',caption:'',title:'Export To CSV',onClickButton : this.saveAsExcel, buttonicon:'ui-icon-document'}); 
 
 	    
 	
@@ -228,7 +235,7 @@ Notification that the dataController associated with this dataView has raised an
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
-	console.log(reason);
+	//console.log(reason);
 	switch(reason) 
 	{
 		case 'dataChange':
@@ -260,17 +267,26 @@ Notification that the dataController associated with this dataView has raised an
 ]]></Implementation>
 </Method>
 
+<Method name="GetListingData">
+<ClassMethod>1</ClassMethod>
+<FormalSpec>curQuery:%String,selR:%String</FormalSpec>
+<ZenMethod>1</ZenMethod>
+<Implementation><![CDATA[	q ##class(DeepSee.ListingInterface).GetListingSql(curQuery,selR)
+]]></Implementation>
+</Method>
+
 <Method name="acquireData">
 <Description>
 Load data and populate the grid</Description>
+<FormalSpec>showListing</FormalSpec>
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
 	// clear old data
-	
-	
+	showListing=true;
 	// connect to controller
 	var controller = this.getConnectedController();
+	window.contr=controller;
 	if (!controller) return;
 	
 	// are we connected to a pivot table?
@@ -287,15 +303,13 @@ Load data and populate the grid</Description>
 		var seriesSize = controller.getDimSize(2);
 		var seriesCount = controller.getDimSize(1);
 	}
-
-	// populate props array
-	var props = [];
-	for (var p = 0; p < seriesSize; p++)
+// populate props array
+var props = [];
+for (var p = 0;p < seriesSize;p++)
 	{
 		var propName = controller.getPropertyName(p);
-		
-		if (!isPivot && propName.charAt(0) == '%') continue;  // KPI special columns
-		
+		if (!isPivot && propName.charAt(0) == '%') continue;
+		// KPI special columns
 		props[props.length] = {name:propName, index:p};
 	}
 	
@@ -315,7 +329,7 @@ Load data and populate the grid</Description>
 		rowData['idd']= n
 		rows[n] = rowData
 	}
-	jQuery("#grid"+this.index).jqGrid('addRowData', 'idd', rows);
+	jQuery("#jqgrid"+this.index).jqGrid('addRowData', 'idd', rows);
 ]]></Implementation>
 </Method>
 
@@ -327,9 +341,9 @@ Subclass can implement this, if they wish.</Description>
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
-	
-jQuery("#grid"+this.index).setGridWidth(width - 4);
-	jQuery("#grid"+this.index).setGridHeight(height - 1 - jQuery("#gbox_grid"+this.index).height() + jQuery("#gbox_grid"+this.index+" .ui-jqgrid-bdiv").height());
+	resizeGrid(this,width,height);
+	jQuery("#jqgrid"+this.index).setGridWidth(width - 4);
+	jQuery("#jqgrid"+this.index).setGridHeight(height - 1 - jQuery("#gbox_jqgrid"+this.index).height() + jQuery("#gbox_jqgrid"+this.index+" .ui-jqgrid-bdiv").height());
 ]]></Implementation>
 </Method>
 </Class>

@@ -70,7 +70,9 @@ Client-side method to render control.</Description>
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
-	renderListingButton(this);
+	//renderListingButton(this);
+	 this.renderSameParts(this);   
+	
 	//Using ONLY rows
        var chart;
 
