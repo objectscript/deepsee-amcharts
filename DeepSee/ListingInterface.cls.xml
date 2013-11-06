@@ -46,8 +46,8 @@
 	    else{
 		    jQuery("#"+target+myindex).hide(1000);
 	    var curQuery=cont.GetCurrentQueryText();
-	    var gridData=JSON.parse(#server(DeepSee.ListingInterface.GetListingSql(curQuery,selR.toString()))#);
-	    //var gridData=JSON.parse(zenClassMethod(self,'GetListingSql','L,L','String',[curQuery,selR.toString]));//(,"0,"+seriesCount+",0,"+seriesCount));
+	   // var gridData=JSON.parse(#server(DeepSee.ListingInterface.GetListingSql(curQuery,selR.toString()))#);
+	    var gridData=JSON.parse(zenClassMethod(self,'GetListingSql','L,L','String',[curQuery,selR.toString()]));//(,"0,"+seriesCount+",0,"+seriesCount));
 	
 		/* 
 		Saving in excel CSV format
