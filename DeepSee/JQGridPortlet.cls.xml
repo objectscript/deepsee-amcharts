@@ -278,16 +278,57 @@ Notification that the dataController associated with this dataView has raised an
 <Method name="acquireData">
 <Description>
 Load data and populate the grid</Description>
-<FormalSpec>showListing</FormalSpec>
 <Language>javascript</Language>
 <ClientMethod>1</ClientMethod>
 <Implementation><![CDATA[
-	// clear old data
-	showListing=true;
 	// connect to controller
 	var controller = this.getConnectedController();
 	window.contr=controller;
 	if (!controller) return;
+	
+	// 
+	// Check out if listing is set as datasource
+	//
+	if(controller.isDrillThrough)
+	{
+		var self=this;
+		var curQuery = controller.GetCurrentQueryText();
+		var selR= "1,1,1,1";
+		var gridData=JSON.parse(zenClassMethod(self,'GetListingData','L,L','String',[curQuery,selR.toString()]));
+		var colModel=[];
+	    var colNames=[];
+
+		for (var key in gridData[0]) colModel.push({"name":key,"index":key});
+	    for (var key in gridData[0]) colNames.push(key);
+	   
+	   	$("#jqgrid"+this.index).GridUnload();
+		jQuery("#jqgrid"+this.index).jqGrid({
+		datatype: 'local'
+		, data:gridData
+		, pager: (this.pager ? '#jqpager'+this.index : '')
+		, rownumbers: this.rownumbers // A new column at left of the grid is added. The purpose of this column is to count the number of available rows, beginning from 1.
+		, viewrecords: this.viewrecords // jqGrid displays the beginning and ending record number in the grid
+		, gridview: this.gridview
+		, colNames: colNames
+		, colModel: colModel
+		, onSelectRow : function(e){ controller.selectCellRange(+e+1,1,+e+1,colNames.length); }
+		});
+	
+
+		
+		
+		if(this.filterToolbar || this.excelExport)
+		jQuery("#jqgrid"+this.index).jqGrid('navGrid','#jqpager'+this.index,{edit:false,add:false,del:false,csv:true,position: 'left'});
+	
+		if(this.filterToolbar)
+		jQuery("#jqgrid"+this.index).jqGrid('filterToolbar', {searchOnEnter:false});
+		
+		if (this.excelExport)
+		jQuery("#jqgrid"+this.index).jqGrid('navButtonAdd','#jqpager'+this.index,{id:'pager_csv',caption:'',title:'Export To CSV',onClickButton : this.saveAsExcel, buttonicon:'ui-icon-document'}); 
+		
+		return;
+	}
+	
 	
 	// are we connected to a pivot table?
 	var isPivot = controller.getSelectedRange;
@@ -329,6 +370,7 @@ for (var p = 0;p < seriesSize;p++)
 		rowData['idd']= n
 		rows[n] = rowData
 	}
+	
 	jQuery("#jqgrid"+this.index).jqGrid('addRowData', 'idd', rows);
 ]]></Implementation>
 </Method>
