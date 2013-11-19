@@ -231,8 +231,8 @@
 		set ans=ans_"{"
 		
 		for i=1:1:colNum {
-			SET column=tStatement.%Metadata.columns.GetAt(i)
-			set ans=ans_""""_column.colName_""":"_""""_RS.%GetData(i)_""""
+			SET column=$zcvt(tStatement.%Metadata.columns.GetAt(i),"O","JS")
+			set ans=ans_""""_$zcvt(column.colName,"O","JS")_""":"_""""_$zcvt(RS.%GetData(i),"O","JS")_""""
 			set:i'=colNum ans=ans_","
 		}
 		set ans=ans_"}"
