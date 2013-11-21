@@ -231,8 +231,8 @@
 		set ans=ans_"{"
 		
 		for i=1:1:colNum {
-			SET column=$zcvt(tStatement.%Metadata.columns.GetAt(i),"O","JS")
-			set ans=ans_""""_$zcvt(column.colName,"O","JS")_""":"_""""_$zcvt(RS.%GetData(i),"O","JS")_""""
+			SET column=tStatement.%Metadata.columns.GetAt(i)
+			set ans=ans_""""_$zcvt(column.colName,"o","JS")_""":"_""""_$zcvt(RS.%GetData(i),"o","JS")_""""
 			set:i'=colNum ans=ans_","
 		}
 		set ans=ans_"}"
@@ -241,6 +241,7 @@
 		set ans=ans_","
 		}
 		set ans=ans_"]"
+		set ^testingGl(1)=ans
 	Q ans
 ]]></Implementation>
 </Method>
